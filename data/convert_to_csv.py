@@ -27,6 +27,30 @@ def generate_wikibase_prompt(value, language):
     - Sentence: "{{}} is citizen of {{}}."
     - Question: "{{}} was a citizen of what country?"
     
+    Example for birth date:
+    - Sentence: "{{}} was born on {{}}."
+    - Question: "When was {{}} born?"
+
+    Example for occupation:
+    - Sentence: "{{}} is a {{}}."
+    - Question: "What is the occupation of {{}}?"
+    
+    Example for spouse:
+    - Sentence: "{{}} is married to {{}}."
+    - Question: "Who is the spouse of {{}}?"
+    
+    Example for parent:
+    - Sentence: "{{}} is the parent of {{}}."
+    - Question: "Who is the parent of {{}}?"
+    
+    Example for child:
+    - Sentence: "{{}} is the child of {{}}."
+    - Question: "Who is the child of {{}}?"
+    
+    Example for place of birth:
+    - Sentence: "{{}} was born in {{}}."
+    - Question: "Where was {{}} born?"
+    
     Return as JSON.
     """
 
