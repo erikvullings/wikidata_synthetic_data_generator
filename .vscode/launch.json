@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug process data",
+      "type": "debugpy",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/data",
+      "program": "./convert_to_csv.py",
+      "console": "integratedTerminal"
+    },
+    {
       "type": "lldb",
       "request": "launch",
       "name": "Debug executable 'wikidata_synthetic_data_generator'",
@@ -21,7 +29,8 @@
       },
       "args": [
         "d:/data/wikidata/latest-all.json",
-        // "-e person,organization",
+        "-e person",
+        "-r",
         "-o ./output",
         "-f JSONLines"
       ],
