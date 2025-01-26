@@ -10,8 +10,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-mod utils;
-use utils::{create_image_thumbnail_url, fetch_base64_image};
+use dashmap::DashMap;
+use memmap2::{Mmap, MmapOptions};
+
 mod batched_writer;
 use batched_writer::BatchedWriter;
 mod entity_resolver;
@@ -119,21 +120,228 @@ fn get_default_properties() -> HashMap<&'static str, Vec<&'static str>> {
     ])
 }
 
-fn process_wikidata(input_path: String, config: Config) -> Result<(), ProcessingError> {
+// Extracted progress printing for reusability
+fn print_progress(start_time: Instant, current_promille: u64, file_size: u64) {
+    let elapsed = start_time.elapsed();
+    let eta = if current_promille > 0 {
+        let total_estimated_time = elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
+        Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
+    } else {
+        Duration::from_secs(0)
+    };
+
+    print!(
+        "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
+        current_promille as f64 / 10.0,
+        elapsed.as_secs(),
+        eta.as_secs()
+    );
+    std::io::stdout().flush().ok();
+}
+
+// fn prefill_cache_old(
+//     input_path: &String,
+//     config: &Config,
+// ) -> Result<EntityResolver, ProcessingError> {
+//     // Create resolver with a specific cache file path
+//     let resolver = EntityResolver::new(
+//         PathBuf::from(format!(
+//             "{}/{}/entity_cache.csv",
+//             config.output_dir, config.lang,
+//         )),
+//         "https://www.wikidata.org/w/api.php".to_string(),
+//         &config.lang,
+//         &config.recreate_cache,
+//     );
+
+//     // Open input file and get total file size for progress tracking
+//     let file = File::open(input_path).expect("JSON dump file not found");
+//     let file_size = file.metadata()?.len();
+//     let reader = BufReader::new(file);
+
+//     // Progress tracking
+//     let start_time = Instant::now();
+//     let total_processed = AtomicU64::new(0);
+//     let last_reported_promille = AtomicU64::new(0);
+
+//     reader
+//         .lines()
+//         .par_bridge()
+//         .try_for_each(|line_result| -> Result<(), ProcessingError> {
+//             // Read line with thread-safe progress tracking
+//             let line = match line_result {
+//                 Ok(line) => line,
+//                 Err(e) => return Err(ProcessingError::IoError(e)),
+//             };
+
+//             // Skip empty or array marker lines
+//             if line.trim().is_empty() || line.starts_with('[') || line.starts_with(']') {
+//                 return Ok(());
+//             }
+
+//             // Update progress using atomic operations
+//             let line_len = line.len() as u64;
+//             let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len; // it returns the previous value, so add line_len
+//             let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
+
+//             // Report progress with 0.1% granularity
+//             let last_promille = last_reported_promille.load(Ordering::Relaxed);
+//             if (current_promille - last_promille) >= 1 {
+//                 // Use compare_exchange to ensure only one thread updates the progress
+//                 if last_reported_promille
+//                     .compare_exchange(
+//                         last_promille,
+//                         current_promille,
+//                         Ordering::SeqCst,
+//                         Ordering::Relaxed,
+//                     )
+//                     .is_ok()
+//                 {
+//                     let elapsed = start_time.elapsed();
+//                     let eta = if current_promille > 0 {
+//                         let total_estimated_time =
+//                             elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
+//                         Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
+//                     } else {
+//                         Duration::from_secs(0)
+//                     };
+
+//                     print!(
+//                         "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
+//                         current_promille as f64 / 10.0,
+//                         elapsed.as_secs(),
+//                         eta.as_secs()
+//                     );
+//                     std::io::stdout().flush()?;
+//                 }
+//             }
+
+//             // Remove trailing comma if present
+//             let json_str = line.trim_end_matches(',');
+
+//             // Parse entity
+//             let entity: WikidataEntity = match serde_json::from_str(json_str) {
+//                 Ok(e) => e,
+//                 Err(_) => return Ok(()),
+//             };
+//             // println!("{:?}", entity);
+//             if let Some(labels) = entity.labels {
+//                 if let Some(label_obj) = labels.get(&config.lang) {
+//                     if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
+//                         // println!("{}, {}", entity.id, &label);
+//                         resolver.add_entry((entity.id.clone(), label.to_string()));
+//                     }
+//                 }
+//             }
+
+//             Ok(())
+//         })?;
+
+//     // Final flush of any remaining entries
+//     resolver.save_cache_to_disk();
+
+//     // Clear progress line
+//     println!(
+//         "\rProcessing: 100% | Completed in {:.0}s                 ",
+//         start_time.elapsed().as_secs()
+//     );
+
+//     Ok(resolver)
+// }
+
+fn prefill_cache(
+    input_path: &String,
+    config: &Config,
+) -> Result<DashMap<String, String>, ProcessingError> {
+    let output_file = PathBuf::from(format!(
+        "{}/{}/entity_cache.csv",
+        config.output_dir, config.lang,
+    ));
+    println!("Output file: {:?}", output_file);
+
+    let entity_map = DashMap::new();
+
+    // Open input file and get total file size for progress tracking
+    let file = File::open(input_path).expect("JSON dump file not found");
+    let file_size = file.metadata()?.len();
+    let mmap = unsafe { MmapOptions::new().map(&file)? };
+    let reader = BufReader::new(mmap.as_ref());
+    // let reader = BufReader::new(file);
+
+    // Progress tracking
+    let start_time = Instant::now();
+    let total_processed = AtomicU64::new(0);
+    let last_reported_promille = AtomicU64::new(0);
+
+    // Parallel processing with better error handling
+    reader
+        .lines()
+        .par_bridge()
+        .try_for_each(|line_result| -> Result<(), ProcessingError> {
+            let line: String = match line_result {
+                Ok(line) => line,
+                Err(e) => return Err(ProcessingError::IoError(e)),
+            };
+
+            if line.trim().is_empty() || line.starts_with(['[', ']']) {
+                return Ok(());
+            }
+
+            let line_len = line.len() as u64;
+            let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len;
+            let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
+
+            if (current_promille - last_reported_promille.load(Ordering::Relaxed)) >= 1 {
+                last_reported_promille.store(current_promille, Ordering::Relaxed);
+                print_progress(start_time, current_promille, file_size);
+            }
+
+            let json_str = line.trim_end_matches(',');
+            let entity: WikidataEntity = match serde_json::from_str(json_str) {
+                Ok(e) => e,
+                Err(_) => return Ok(()),
+            };
+
+            if let Some(label) = entity
+                .labels
+                .and_then(|labels| labels.get(&config.lang).cloned())
+                .and_then(|label_obj| label_obj.get("value")?.as_str().map(|s| s.to_string()))
+            {
+                // println!("{}, {}", entity.id, &label);
+                entity_map.insert(entity.id, label);
+            }
+
+            Ok(())
+        })?;
+
+    // Clear progress line
+    println!(
+        "\rProcessing: 100% | Completed in {:.0}s                 ",
+        start_time.elapsed().as_secs()
+    );
+
+    // Write resolver to CSV at the end
+    let mut writer = csv::Writer::from_path(output_file)?;
+    for entry in entity_map.iter() {
+        writer.write_record(&[entry.key(), entry.value()])?;
+    }
+    writer.flush()?;
+
+    Ok(entity_map)
+}
+
+fn process_wikidata(
+    input_path: &String,
+    config: &Config,
+    resolver: EntityResolver,
+) -> Result<(), ProcessingError> {
     let entity_mappings = get_entity_type_mappings();
     let default_properties = get_default_properties();
-
-    // Create resolver with a specific cache file path
-    let resolver = EntityResolver::new(
-        PathBuf::from(format!("{}/entity_cache.csv", config.output_dir)),
-        "https://www.wikidata.org/w/api.php".to_string(),
-        &config.lang,
-    );
 
     // Initialize CSV writers
     let mut csv_writers: HashMap<String, csv::Writer<File>> = HashMap::new();
     for entity_type in &config.entity_types {
-        let csv_path = format!("{}/{}.csv", config.output_dir, entity_type);
+        let csv_path = format!("{}/{}/{}.csv", config.output_dir, config.lang, entity_type);
         csv_writers.insert(entity_type.clone(), csv::Writer::from_path(csv_path)?);
     }
 
@@ -269,7 +477,6 @@ fn process_wikidata(input_path: String, config: Config) -> Result<(), Processing
                                         entity_type,
                                         &entity.id,
                                         &claims,
-                                        &config,
                                         &default_properties,
                                         label,
                                         &aliases,
@@ -312,7 +519,6 @@ fn prepare_data_export(
     entity_type: &String,
     entity_id: &str,
     claims: &Map<String, Value>,
-    config: &Config,
     default_properties: &HashMap<&str, Vec<&str>>,
     label: &str,
     aliases: &Vec<&str>,
@@ -321,7 +527,6 @@ fn prepare_data_export(
     let properties = &resolver.resolve_entity_ids(extract_properties(
         entity_type,
         &Value::Object(claims.clone()),
-        config.process_images,
         default_properties,
     ));
 
@@ -462,7 +667,6 @@ fn write_entity_data(
 fn extract_properties(
     entity_type: &str,
     claims: &Value,
-    process_images: bool,
     default_properties: &HashMap<&str, Vec<&str>>,
 ) -> Map<String, Value> {
     let mut properties = serde_json::Map::new();
@@ -504,32 +708,6 @@ fn extract_properties(
                                 .and_then(|v| v.get("id"))
                             {
                                 properties.insert(prop.to_string(), id_value.clone());
-                            }
-                        }
-                        "P18" | "P154" => {
-                            // Extract base64-decoded image (P18 = Image property)
-                            if let Some(commons_url) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                                .and_then(|v| v.as_str())
-                            {
-                                if process_images {
-                                    if let Some(url) = create_image_thumbnail_url(commons_url, None)
-                                    {
-                                        if let Ok(base64_image) = fetch_base64_image(url) {
-                                            properties.insert(
-                                                "image".to_string(),
-                                                Value::String(base64_image),
-                                            );
-                                        }
-                                    }
-                                } else {
-                                    properties.insert(
-                                        "image".to_string(),
-                                        Value::String(commons_url.to_string()),
-                                    );
-                                }
                             }
                         }
                         "P159" => {
@@ -579,8 +757,18 @@ fn extract_properties(
     properties
 }
 
+// fn main() -> Result<(), ProcessingError> {
 fn main() -> Result<(), ProcessingError> {
     let (input_file, config) = get_configuration()?;
 
-    process_wikidata(input_file, config)
+    let resolver = match prefill_cache(&input_file, &config) {
+        Ok(r) => r,
+        Err(e) => return Err(e),
+    };
+    // let resolver = match prefill_cache(&input_file, &config) {
+    //     Ok(r) => r,
+    //     Err(e) => return Err(e),
+    // };
+    // process_wikidata(&input_file, &config, resolver)
+    Ok(())
 }

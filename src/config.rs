@@ -12,8 +12,8 @@ pub struct Config {
     pub lang: String,
     /// Output directory, will be created automatically if it doesn't exist
     pub output_dir: String,
-    /// Extract images as base64 strings. If not, only the image filename is returned.
-    pub process_images: bool,
+    /// Recreate the cache if it exists. If it doesn't exist, it will be created.
+    pub recreate_cache: bool,
 }
 
 /// Get the input file and additional configuration settings
@@ -48,10 +48,10 @@ pub fn get_configuration() -> Result<(String, Config), ProcessingError> {
           .help("Path to the Wikidata JSON dump")
           .required(true)
           .index(1))
-      .arg(Arg::new("process_images")
-          .short('i')
-          .long("process-images")
-          .help("Process images")
+      .arg(Arg::new("recreate_cache")
+          .short('r')
+          .long("recreate_cache")
+          .help("Recreate cache from scratch: in case no cache file is found, it will also be true.")
           .action(ArgAction::SetTrue) // This makes it a flag, not requiring a value
           .default_value("false"))
       .get_matches();
@@ -67,7 +67,7 @@ pub fn get_configuration() -> Result<(String, Config), ProcessingError> {
         .unwrap()
         .trim()
         .to_string();
-    let process_images = matches.get_flag("process_images");
+    let recreate_cache = matches.get_flag("recreate_cache");
     let output_path = Path::new(&output_dir);
     if !output_path.exists() {
         create_dir_all(output_path)?;
@@ -77,7 +77,7 @@ pub fn get_configuration() -> Result<(String, Config), ProcessingError> {
         entity_types,
         lang,
         output_dir,
-        process_images,
+        recreate_cache,
     };
     Ok((input_file, config))
 }

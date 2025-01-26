@@ -67,12 +67,26 @@ pub struct EntityResolver {
 }
 
 impl EntityResolver {
-    pub fn new(cache_file_path: PathBuf, api_base_url: String, language: &str) -> Self {
-        // Try to load existing cache, or create a new one
-        let cache = match EntityCache::load_from_csv(&cache_file_path) {
-            Ok(loaded_cache) => Arc::new(RwLock::new(loaded_cache)),
-            Err(_) => Arc::new(RwLock::new(EntityCache::new())),
+    pub fn new(
+        cache_file_path: PathBuf,
+        api_base_url: String,
+        language: &str,
+        recreate_cache: &bool,
+    ) -> Self {
+        let cache = if *recreate_cache {
+            Arc::new(RwLock::new(EntityCache::new()))
+        } else {
+            match EntityCache::load_from_csv(&cache_file_path) {
+                Ok(loaded_cache) => Arc::new(RwLock::new(loaded_cache)),
+                Err(_) => Arc::new(RwLock::new(EntityCache::new())),
+            }
         };
+
+        // // Try to load existing cache, or create a new one
+        // let cache = match EntityCache::load_from_csv(&cache_file_path) {
+        //     Ok(loaded_cache) => Arc::new(RwLock::new(loaded_cache)),
+        //     Err(_) => Arc::new(RwLock::new(EntityCache::new())),
+        // };
 
         let languages = if language == "en" {
             "en".to_string()
@@ -147,6 +161,38 @@ impl EntityResolver {
         properties
     }
 
+    /// Adds new entries directly to the cache without saving to disk immediately.
+    /// Useful for prefilling the cache with known entities.
+    fn add_entries_to_cache(&self, entries: HashMap<String, String>) {
+        let mut cache = self.cache.write().unwrap();
+        cache.entries.extend(entries);
+    }
+
+    pub fn add_entry(&self, key_value: (String, String)) {
+        let mut cache = self.cache.write().unwrap();
+        cache.entries.insert(key_value.0, key_value.1);
+    }
+
+    // /// Prefills the cache with new entries from a given map of IDs to labels.
+    // /// This method provides flexibility for manually adding entities before initial API resolution.
+    // pub fn prefill_cache(&self, prefill_entries: HashMap<String, String>) {
+    //     self.add_entries_to_cache(prefill_entries);
+    //     // Optionally, save the cache immediately after prefilling if needed
+    //     match self.save_cache_to_disk() {
+    //         Ok(_) => {}
+    //         Err(e) => eprintln!("Failed to save cache: {}", e),
+    //     }
+    // }
+
+    /// Saves the current cache state to disk immediately.
+    /// Use this method if you want to persist changes right after prefilling.
+    pub fn save_cache_to_disk(&self) {
+        let cache = self.cache.read().unwrap();
+        if let Err(e) = cache.save_to_csv(&self.cache_file_path) {
+            eprintln!("Failed to save cache: {}", e);
+        }
+    }
+
     // Fetch and cache entities
     fn fetch_and_cache_entities(&self, ids: &HashSet<String>, api_base_url: &str) {
         let client = Client::new();
@@ -195,15 +241,9 @@ impl EntityResolver {
 
     // Batch update cache with a write lock
     fn batch_update_cache(&self, labels: HashMap<String, String>) {
-        let mut save_count = self.save_counter.lock().unwrap();
+        self.add_entries_to_cache(labels);
 
-        // Update cache with write lock
-        {
-            let mut cache = self.cache.write().unwrap();
-            for (id, label) in labels {
-                cache.entries.insert(id, label);
-            }
-        }
+        let mut save_count = self.save_counter.lock().unwrap();
 
         // Periodically save to disk (e.g., every 100 updates)
         *save_count += 1;
@@ -215,22 +255,3 @@ impl EntityResolver {
         }
     }
 }
-
-// // Example usage
-// fn main() {
-//     // Create resolver with a specific cache file path
-//     let resolver = EntityResolver::new(PathBuf::from("entity_cache.csv"));
-
-//     // Sample properties
-//     let mut properties = HashMap::from([
-//         ("P106".to_string(), Value::String("Q10841764".to_string())),
-//         (
-//             "name".to_string(),
-//             Value::String("Lewis Hamilton".to_string()),
-//         ),
-//     ]);
-
-//     // Resolve entities
-//     let resolved_properties =
-//         resolver.resolve_entity_ids(properties, "https://www.wikidata.org/w/api.php");
-// }

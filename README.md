@@ -62,10 +62,10 @@ Unzip the data to `latest-all.json` using 7zip or some efficient unzipper that s
 
 ## Run
 
-Using English as the main language:
+Using English as the main language, recreating the cache:
 
 ```bash
-cargo run --release -- /d/data/wikidata/latest-all.json -l en -e person -o ./output
+cargo run --release -- /d/data/wikidata/latest-all.json -l en -r -e person -o ./output
 ```
 
 Alternatively, specify the language, e.g. using Dutch:
