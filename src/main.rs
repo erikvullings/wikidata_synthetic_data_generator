@@ -5,7 +5,7 @@ use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -22,6 +22,13 @@ use processing_error::ProcessingError;
 mod config;
 use config::{get_configuration, Config};
 
+#[derive(Deserialize, Debug)]
+struct Sitelink {
+    title: String,               // The title of the page on the specific site
+    badges: Option<Vec<String>>, // Optional badges associated with the link
+    url: Option<String>,         // Optional URL of the page
+}
+
 #[derive(Debug, Deserialize)]
 struct WikidataEntity {
     id: String,
@@ -30,7 +37,7 @@ struct WikidataEntity {
     descriptions: Option<Map<String, Value>>,
     aliases: Option<Map<String, Value>>,
     // #[serde(default)]
-    // sitelinks: Value,
+    sitelinks: Option<HashMap<String, Sitelink>>,
 }
 
 fn get_entity_type_mappings() -> HashMap<&'static str, Vec<&'static str>> {
@@ -139,116 +146,6 @@ fn print_progress(start_time: Instant, current_promille: u64, file_size: u64) {
     std::io::stdout().flush().ok();
 }
 
-// fn prefill_cache_old(
-//     input_path: &String,
-//     config: &Config,
-// ) -> Result<EntityResolver, ProcessingError> {
-//     // Create resolver with a specific cache file path
-//     let resolver = EntityResolver::new(
-//         PathBuf::from(format!(
-//             "{}/{}/entity_cache.csv",
-//             config.output_dir, config.lang,
-//         )),
-//         "https://www.wikidata.org/w/api.php".to_string(),
-//         &config.lang,
-//         &config.recreate_cache,
-//     );
-
-//     // Open input file and get total file size for progress tracking
-//     let file = File::open(input_path).expect("JSON dump file not found");
-//     let file_size = file.metadata()?.len();
-//     let reader = BufReader::new(file);
-
-//     // Progress tracking
-//     let start_time = Instant::now();
-//     let total_processed = AtomicU64::new(0);
-//     let last_reported_promille = AtomicU64::new(0);
-
-//     reader
-//         .lines()
-//         .par_bridge()
-//         .try_for_each(|line_result| -> Result<(), ProcessingError> {
-//             // Read line with thread-safe progress tracking
-//             let line = match line_result {
-//                 Ok(line) => line,
-//                 Err(e) => return Err(ProcessingError::IoError(e)),
-//             };
-
-//             // Skip empty or array marker lines
-//             if line.trim().is_empty() || line.starts_with('[') || line.starts_with(']') {
-//                 return Ok(());
-//             }
-
-//             // Update progress using atomic operations
-//             let line_len = line.len() as u64;
-//             let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len; // it returns the previous value, so add line_len
-//             let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
-
-//             // Report progress with 0.1% granularity
-//             let last_promille = last_reported_promille.load(Ordering::Relaxed);
-//             if (current_promille - last_promille) >= 1 {
-//                 // Use compare_exchange to ensure only one thread updates the progress
-//                 if last_reported_promille
-//                     .compare_exchange(
-//                         last_promille,
-//                         current_promille,
-//                         Ordering::SeqCst,
-//                         Ordering::Relaxed,
-//                     )
-//                     .is_ok()
-//                 {
-//                     let elapsed = start_time.elapsed();
-//                     let eta = if current_promille > 0 {
-//                         let total_estimated_time =
-//                             elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
-//                         Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
-//                     } else {
-//                         Duration::from_secs(0)
-//                     };
-
-//                     print!(
-//                         "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
-//                         current_promille as f64 / 10.0,
-//                         elapsed.as_secs(),
-//                         eta.as_secs()
-//                     );
-//                     std::io::stdout().flush()?;
-//                 }
-//             }
-
-//             // Remove trailing comma if present
-//             let json_str = line.trim_end_matches(',');
-
-//             // Parse entity
-//             let entity: WikidataEntity = match serde_json::from_str(json_str) {
-//                 Ok(e) => e,
-//                 Err(_) => return Ok(()),
-//             };
-//             // println!("{:?}", entity);
-//             if let Some(labels) = entity.labels {
-//                 if let Some(label_obj) = labels.get(&config.lang) {
-//                     if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
-//                         // println!("{}, {}", entity.id, &label);
-//                         resolver.add_entry((entity.id.clone(), label.to_string()));
-//                     }
-//                 }
-//             }
-
-//             Ok(())
-//         })?;
-
-//     // Final flush of any remaining entries
-//     resolver.save_cache_to_disk();
-
-//     // Clear progress line
-//     println!(
-//         "\rProcessing: 100% | Completed in {:.0}s                 ",
-//         start_time.elapsed().as_secs()
-//     );
-
-//     Ok(resolver)
-// }
-
 fn prefill_cache(
     input_path: &String,
     config: &Config,
@@ -260,6 +157,18 @@ fn prefill_cache(
     println!("Output file: {:?}", output_file);
 
     let entity_map = DashMap::new();
+
+    if !config.recreate_cache && Path::new(&output_file).exists() {
+        // TODO Remove
+        return Ok(entity_map);
+        // Load cache from disk
+        let mut reader = csv::Reader::from_path(output_file)?;
+        for result in reader.records() {
+            let record = result?;
+            entity_map.insert(record[0].to_string(), record[1].to_string());
+        }
+        return Ok(entity_map);
+    }
 
     // Open input file and get total file size for progress tracking
     let file = File::open(input_path).expect("JSON dump file not found");
@@ -330,106 +239,127 @@ fn prefill_cache(
     Ok(entity_map)
 }
 
+// WikiProperties record
+#[derive(Debug, Deserialize)]
+struct WikiProperties {
+    key: String,
+    value: String,
+    sentence: String,
+    question: String,
+}
+
 fn process_wikidata(
     input_path: &String,
     config: &Config,
-    resolver: EntityResolver,
+    resolver: DashMap<String, String>,
 ) -> Result<(), ProcessingError> {
-    let entity_mappings = get_entity_type_mappings();
-    let default_properties = get_default_properties();
+    let properties_file = PathBuf::from(format!("./data/wikidata-{}-properties.csv", config.lang,));
+    println!("Properties file: {:?}", properties_file);
 
-    // Initialize CSV writers
-    let mut csv_writers: HashMap<String, csv::Writer<File>> = HashMap::new();
-    for entity_type in &config.entity_types {
-        let csv_path = format!("{}/{}/{}.csv", config.output_dir, config.lang, entity_type);
-        csv_writers.insert(entity_type.clone(), csv::Writer::from_path(csv_path)?);
+    let properties_map = DashMap::new();
+
+    let mut reader = csv::ReaderBuilder::new()
+        .delimiter(b';')
+        .has_headers(true)
+        .from_reader(File::open(properties_file)?);
+    for result in reader.deserialize() {
+        // println!("Record: {:?}", result);
+        let record: WikiProperties = result?;
+        properties_map.insert(
+            record.key.to_string(),
+            (
+                record.value.to_string(),    // value
+                record.sentence.to_string(), // sentence
+                record.question.to_string(), // question
+            ),
+        );
     }
-
-    // Create a batched writer
-    let batched_writer = BatchedWriter::new(csv_writers, 100);
-    let batched_writer = Arc::new(Mutex::new(batched_writer));
 
     // Open input file and get total file size for progress tracking
     let file = File::open(input_path).expect("JSON dump file not found");
     let file_size = file.metadata()?.len();
-    let reader = BufReader::new(file);
+    let mmap = unsafe { MmapOptions::new().map(&file)? };
+    let reader = BufReader::new(mmap.as_ref());
+    // let reader = BufReader::new(file);
 
     // Progress tracking
     let start_time = Instant::now();
     let total_processed = AtomicU64::new(0);
     let last_reported_promille = AtomicU64::new(0);
 
-    // Process file in parallel
+    // Parallel processing with better error handling
     reader
         .lines()
         .par_bridge()
         .try_for_each(|line_result| -> Result<(), ProcessingError> {
-            // Read line with thread-safe progress tracking
-            let line = match line_result {
+            let line: String = match line_result {
                 Ok(line) => line,
                 Err(e) => return Err(ProcessingError::IoError(e)),
             };
 
-            // Skip empty or array marker lines
-            if line.trim().is_empty() || line.starts_with('[') || line.starts_with(']') {
+            if line.trim().is_empty() || line.starts_with(['[', ']']) {
                 return Ok(());
             }
 
-            // Update progress using atomic operations
             let line_len = line.len() as u64;
-            let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len; // it returns the previous value, so add line_len
+            let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len;
             let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
 
-            // Report progress with 0.1% granularity
-            let last_promille = last_reported_promille.load(Ordering::Relaxed);
-            if (current_promille - last_promille) >= 1 {
-                // Use compare_exchange to ensure only one thread updates the progress
-                if last_reported_promille
-                    .compare_exchange(
-                        last_promille,
-                        current_promille,
-                        Ordering::SeqCst,
-                        Ordering::Relaxed,
-                    )
-                    .is_ok()
-                {
-                    let elapsed = start_time.elapsed();
-                    let eta = if current_promille > 0 {
-                        let total_estimated_time =
-                            elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
-                        Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
-                    } else {
-                        Duration::from_secs(0)
-                    };
-
-                    print!(
-                        "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
-                        current_promille as f64 / 10.0,
-                        elapsed.as_secs(),
-                        eta.as_secs()
-                    );
-                    std::io::stdout().flush()?;
-                }
+            if (current_promille - last_reported_promille.load(Ordering::Relaxed)) >= 1 {
+                last_reported_promille.store(current_promille, Ordering::Relaxed);
+                print_progress(start_time, current_promille, file_size);
             }
 
-            // Remove trailing comma if present
             let json_str = line.trim_end_matches(',');
-
-            // Parse entity
             let entity: WikidataEntity = match serde_json::from_str(json_str) {
                 Ok(e) => e,
                 Err(_) => return Ok(()),
             };
-            // if let Some(title) = entity.sitelinks["enwiki"]["title"].as_str() {
-            //     dbg!(title);
-            // }
 
             // Process entity
-            if let (Some(claims), Some(labels), Some(descriptions), Some(aliases)) = (
+
+            // Extract Labels
+            if let Some(labels) = &entity.labels {
+                if let Some(label_obj) = labels.get(&config.lang) {
+                    if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
+                        let mut sentences: Vec<String> = Vec::new();
+                        if let Some(descriptions) = &entity.descriptions {
+                            if let Some(description_obj) = descriptions.get(&config.lang) {
+                                if let Some(description) =
+                                    description_obj.get("value").and_then(|v| v.as_str())
+                                {
+                                    sentences.push(format!("{} is a {}", label, description));
+                                }
+                            }
+                        }
+                    }
+                    println!(
+                        "English Label: {:?}",
+                        serde_json::to_string_pretty(en_label).unwrap()
+                    );
+                } else {
+                    println!("No English label found.");
+                }
+                // Similarly for other languages if available
+                // if let Some(nl_label) = labels.get("nl") {
+                //     println!("Dutch Label: {:?}", serde_json::to_string_pretty(nl_label));
+                // }
+            } else {
+                println!("No labels found.");
+            }
+
+            if let (
+                Some(claims),
+                Some(labels),
+                Some(descriptions),
+                Some(aliases),
+                Some(sitelinks),
+            ) = (
                 entity.claims,
                 entity.labels,
                 entity.descriptions,
                 entity.aliases,
+                entity.sitelinks,
             ) {
                 if let Some(label_obj) = labels.get(&config.lang) {
                     if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
@@ -455,45 +385,88 @@ fn process_wikidata(
                                 )
                             })
                             .unwrap_or(Vec::new());
+                        let instance_of = claims.get("P31").and_then(|p31| p31.as_array()).map_or(
+                            Vec::new(),
+                            |instances| {
+                                instances
+                                    .iter()
+                                    .filter_map(|i| {
+                                        i["mainsnak"]["datavalue"]["value"]["id"]
+                                            .as_str()
+                                            .map(|instance| instance.to_string())
+                                    })
+                                    .collect()
+                            },
+                        );
 
-                        for entity_type in &config.entity_types {
-                            if let Some(instance_of) = entity_mappings.get(entity_type.as_str()) {
-                                if claims.get("P31").and_then(|p31| p31.as_array()).map_or(
-                                    false,
-                                    |instances| {
-                                        instances.iter().any(|i| {
-                                            if let Some(instance) =
-                                                i["mainsnak"]["datavalue"]["value"]["id"].as_str()
-                                            {
-                                                instance_of.contains(&instance)
-                                            } else {
-                                                false
-                                            }
-                                        })
-                                    },
-                                ) {
-                                    let (used_names, kv_entry) = prepare_data_export(
-                                        &resolver,
-                                        entity_type,
-                                        &entity.id,
-                                        &claims,
-                                        &default_properties,
-                                        label,
-                                        &aliases,
-                                        description,
-                                    );
+                        let part_of = claims.get("P361").and_then(|p31| p31.as_array()).map_or(
+                            Vec::new(),
+                            |instances| {
+                                instances
+                                    .iter()
+                                    .filter_map(|i| {
+                                        i["mainsnak"]["datavalue"]["value"]["id"]
+                                            .as_str()
+                                            .map(|instance| instance.to_string())
+                                    })
+                                    .collect()
+                            },
+                        );
 
-                                    // Batch the writes
-                                    let mut writer = batched_writer.lock().unwrap();
-                                    write_entity_data(
-                                        &mut writer,
-                                        entity_type,
-                                        used_names,
-                                        kv_entry,
-                                    )?;
-                                }
-                            }
+                        // println!(
+                        //     "{}: {}, desc: {}, instance_of {:?}, claims: {:?}\n\n",
+                        //     entity.id, label, description, instance_of, claims,
+                        // );
+                        if instance_of.contains(&"Q5".to_string()) {
+                            println!("Entity: {}", entity.id);
+                            println!("Label: {}", label);
+                            println!("Desc: {}\n\n", description);
+                            // println!("Has English Wiki: {}", sitelinks.get("enwiki").);
+                            // println!("{:?}", sitelinks);
+                            // println!(
+                            //     "{}: {}, instance_of {:?}, part_of {:?}, sitelinks: {:?}",
+                            //     label, description, instance_of, part_of, sitelinks
+                            // )
                         }
+
+                        // for entity_type in &config.entity_types {
+                        //     if let Some(instance_of) = entity_mappings.get(entity_type.as_str()) {
+                        //         if claims.get("P31").and_then(|p31| p31.as_array()).map_or(
+                        //             false,
+                        //             |instances| {
+                        //                 instances.iter().any(|i| {
+                        //                     if let Some(instance) =
+                        //                         i["mainsnak"]["datavalue"]["value"]["id"].as_str()
+                        //                     {
+                        //                         instance_of.contains(&instance)
+                        //                     } else {
+                        //                         false
+                        //                     }
+                        //                 })
+                        //             },
+                        //         ) {
+                        //             let (used_names, kv_entry) = prepare_data_export(
+                        //                 &resolver,
+                        //                 entity_type,
+                        //                 &entity.id,
+                        //                 &claims,
+                        //                 &default_properties,
+                        //                 label,
+                        //                 &aliases,
+                        //                 description,
+                        //             );
+
+                        //             // Batch the writes
+                        //             let mut writer = batched_writer.lock().unwrap();
+                        //             write_entity_data(
+                        //                 &mut writer,
+                        //                 entity_type,
+                        //                 used_names,
+                        //                 kv_entry,
+                        //             )?;
+                        //         }
+                        //     }
+                        // }
                     }
                 }
             }
@@ -501,14 +474,193 @@ fn process_wikidata(
             Ok(())
         })?;
 
-    // Final flush of any remaining entries
-    batched_writer.lock().unwrap().finalize()?;
-
     // Clear progress line
     println!(
         "\rProcessing: 100% | Completed in {:.0}s                 ",
         start_time.elapsed().as_secs()
     );
+
+    // Write resolver to CSV at the end
+    // let mut writer = csv::Writer::from_path(output_file)?;
+    // for entry in entity_map.iter() {
+    //     writer.write_record(&[entry.key(), entry.value()])?;
+    // }
+    // writer.flush()?;
+
+    // let entity_mappings = get_entity_type_mappings();
+    // let default_properties = get_default_properties();
+
+    // // Initialize CSV writers
+    // let mut csv_writers: HashMap<String, csv::Writer<File>> = HashMap::new();
+    // for entity_type in &config.entity_types {
+    //     let csv_path = format!("{}/{}/{}.csv", config.output_dir, config.lang, entity_type);
+    //     csv_writers.insert(entity_type.clone(), csv::Writer::from_path(csv_path)?);
+    // }
+
+    // // Create a batched writer
+    // let batched_writer = BatchedWriter::new(csv_writers, 100);
+    // let batched_writer = Arc::new(Mutex::new(batched_writer));
+
+    // // Open input file and get total file size for progress tracking
+    // let file = File::open(input_path).expect("JSON dump file not found");
+    // let file_size = file.metadata()?.len();
+    // let reader = BufReader::new(file);
+
+    // // Progress tracking
+    // let start_time = Instant::now();
+    // let total_processed = AtomicU64::new(0);
+    // let last_reported_promille = AtomicU64::new(0);
+
+    // // Process file in parallel
+    // reader
+    //     .lines()
+    //     .par_bridge()
+    //     .try_for_each(|line_result| -> Result<(), ProcessingError> {
+    //         // Read line with thread-safe progress tracking
+    //         let line = match line_result {
+    //             Ok(line) => line,
+    //             Err(e) => return Err(ProcessingError::IoError(e)),
+    //         };
+
+    //         // Skip empty or array marker lines
+    //         if line.trim().is_empty() || line.starts_with('[') || line.starts_with(']') {
+    //             return Ok(());
+    //         }
+
+    //         // Update progress using atomic operations
+    //         let line_len = line.len() as u64;
+    //         let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len; // it returns the previous value, so add line_len
+    //         let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
+
+    //         // Report progress with 0.1% granularity
+    //         let last_promille = last_reported_promille.load(Ordering::Relaxed);
+    //         if (current_promille - last_promille) >= 1 {
+    //             // Use compare_exchange to ensure only one thread updates the progress
+    //             if last_reported_promille
+    //                 .compare_exchange(
+    //                     last_promille,
+    //                     current_promille,
+    //                     Ordering::SeqCst,
+    //                     Ordering::Relaxed,
+    //                 )
+    //                 .is_ok()
+    //             {
+    //                 let elapsed = start_time.elapsed();
+    //                 let eta = if current_promille > 0 {
+    //                     let total_estimated_time =
+    //                         elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
+    //                     Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
+    //                 } else {
+    //                     Duration::from_secs(0)
+    //                 };
+
+    //                 print!(
+    //                     "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
+    //                     current_promille as f64 / 10.0,
+    //                     elapsed.as_secs(),
+    //                     eta.as_secs()
+    //                 );
+    //                 std::io::stdout().flush()?;
+    //             }
+    //         }
+
+    //         // Remove trailing comma if present
+    //         let json_str = line.trim_end_matches(',');
+
+    //         // Parse entity
+    //         let entity: WikidataEntity = match serde_json::from_str(json_str) {
+    //             Ok(e) => e,
+    //             Err(_) => return Ok(()),
+    //         };
+    //         // if let Some(title) = entity.sitelinks["enwiki"]["title"].as_str() {
+    //         //     dbg!(title);
+    //         // }
+
+    //         // Process entity
+    //         if let (Some(claims), Some(labels), Some(descriptions), Some(aliases)) = (
+    //             entity.claims,
+    //             entity.labels,
+    //             entity.descriptions,
+    //             entity.aliases,
+    //         ) {
+    //             if let Some(label_obj) = labels.get(&config.lang) {
+    //                 if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
+    //                     let description = descriptions
+    //                         .get(&config.lang)
+    //                         // .or(descriptions.get("en"))
+    //                         .and_then(|obj| obj.get("value"))
+    //                         .and_then(|v| v.as_str())
+    //                         .unwrap_or("");
+    //                     let aliases = aliases
+    //                         .get(&config.lang)
+    //                         .and_then(|value| value.as_array())
+    //                         .and_then(|values| {
+    //                             // dbg!(&values);
+    //                             Some(
+    //                                 values
+    //                                     .iter()
+    //                                     .map(|v| {
+    //                                         v.get("value").and_then(|v| v.as_str()).unwrap_or("")
+    //                                     })
+    //                                     .filter(|alias| *alias != label)
+    //                                     .collect::<Vec<&str>>(),
+    //                             )
+    //                         })
+    //                         .unwrap_or(Vec::new());
+
+    //                     for entity_type in &config.entity_types {
+    //                         if let Some(instance_of) = entity_mappings.get(entity_type.as_str()) {
+    //                             if claims.get("P31").and_then(|p31| p31.as_array()).map_or(
+    //                                 false,
+    //                                 |instances| {
+    //                                     instances.iter().any(|i| {
+    //                                         if let Some(instance) =
+    //                                             i["mainsnak"]["datavalue"]["value"]["id"].as_str()
+    //                                         {
+    //                                             instance_of.contains(&instance)
+    //                                         } else {
+    //                                             false
+    //                                         }
+    //                                     })
+    //                                 },
+    //                             ) {
+    //                                 let (used_names, kv_entry) = prepare_data_export(
+    //                                     &resolver,
+    //                                     entity_type,
+    //                                     &entity.id,
+    //                                     &claims,
+    //                                     &default_properties,
+    //                                     label,
+    //                                     &aliases,
+    //                                     description,
+    //                                 );
+
+    //                                 // Batch the writes
+    //                                 let mut writer = batched_writer.lock().unwrap();
+    //                                 write_entity_data(
+    //                                     &mut writer,
+    //                                     entity_type,
+    //                                     used_names,
+    //                                     kv_entry,
+    //                                 )?;
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         Ok(())
+    //     })?;
+
+    // // Final flush of any remaining entries
+    // batched_writer.lock().unwrap().finalize()?;
+
+    // // Clear progress line
+    // println!(
+    //     "\rProcessing: 100% | Completed in {:.0}s                 ",
+    //     start_time.elapsed().as_secs()
+    // );
 
     Ok(())
 }
@@ -765,10 +917,6 @@ fn main() -> Result<(), ProcessingError> {
         Ok(r) => r,
         Err(e) => return Err(e),
     };
-    // let resolver = match prefill_cache(&input_file, &config) {
-    //     Ok(r) => r,
-    //     Err(e) => return Err(e),
-    // };
-    // process_wikidata(&input_file, &config, resolver)
-    Ok(())
+    process_wikidata(&input_file, &config, resolver)
+    // Ok(())
 }

@@ -30,7 +30,7 @@
       "args": [
         "d:/data/wikidata/latest-all.json",
         "-e person",
-        "-r",
+        // "-r",
         "-o ./output",
         "-f JSONLines"
       ],

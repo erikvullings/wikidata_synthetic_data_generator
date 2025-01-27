@@ -1,4 +1,6 @@
 key;value;sentence;question
+descriptions;descriptions;{}: {}.;What or who is described by {}?
+aliases;aliases;{} is also known as {}.; What is an alias for {}?
 P6;head of government;{} is the head of government of {}.;Who is the head of government of {}?
 P10;video;"{} has a video titled ""{}"".";What is the title of the video associated with {}?
 P14;traffic sign;{} has a traffic sign that indicates {}.;What does the traffic sign associated with {} indicate?
