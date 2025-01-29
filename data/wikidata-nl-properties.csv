@@ -1,4 +1,11 @@
 key;value;sentence;question
+descriptions;descriptions;{}: {}.;Wat is omschreven als "{}"?
+person_descriptions;person_descriptions;{}: {}.;Wie wordt omschreven als "{}"?
+aliases;aliases;{} staat ook bekend als {}.;Wat is een bijnaam voor "{}"?
+person_aliases;person_aliases;{} staat ook bekend als {}.;Wie gebruikt het alias "{}"?
+male_person;male_person;he;he
+female_person;female_person;she;she
+list;list;and;and
 P6;bestuurshoofd;{} is het bestuurshoofd van {}.;Wie is het bestuurshoofd van {}?
 P10;video;{} heeft een video.;Heeft {} een video?
 P14;wegbord;{} heeft een wegboord met de code {}.;Wat is de code van het wegboord dat bij {} hoort?
@@ -278,7 +285,7 @@ P464;NOR-identificatiecode;{} heeft de NOR-identificatiecode {}.;Wat is de NOR-i
 P465;sRGB-hexcode;{} heeft de sRGB-hexcode {}.;Wat is de sRGB-hexcode van {}?
 P466;gebruiker;{} is gebruiker van {}.;Van welke dienst(en) is/ zijn {} gebruiker(s)?
 P467;wetgeving aangenomen door;{} heeft de wetgeving aangenomen door {}.;Door wie is de wetgeving aangenomen door {}?
-P468;dan/kyurang;{} heeft een {kyurang}.;Wat is de {kyurang} van {}?
+P468;dan/kyurang;{} heeft een dan/kyurang van {}.;Welke dan/kyurang heeft {}?
 P469;meren aan de rivier;{} ligt aan de rivier {}.;Aan welke rivier ligt {}?
 P470;Eight Banner register;{} staat vermeld in het Acht Banner register.;In welk Acht Banner register staat {} vermeld?
 P473;netnummer;{} heeft het netnummer {}.;Wat is het netnummer van {}?
@@ -367,7 +374,7 @@ P565;kristalhabitus;{} heeft een kristalhabitus van {}.;Wat is de kristalhabitus
 P566;basioniem;{} heeft als basioniem {}.;Wat is de basioniem van {}?
 P567;hangend onder;{} hangt onder {}.;Waar hangt {} onder?
 P568;liggend op;{} ligt op {}.;Op welke locatie ligt {}?
-P569;geboortedatum;{subject} werd geboren op {geboortedatum}.;Wanneer is {subject} geboren?
+P569;geboortedatum;{} werd geboren op {}.;Wanneer is {} geboren?
 P570;overlijdensdatum;{} overleed op {}.;Wanneer is {} overleden?
 P571;datum van oprichting of creatie;{} werd opgericht op {}.;Wanneer werd {} opgericht?
 P574;datum van taxonomische publicatie;{} heeft de datum van taxonomische publicatie op {}.;Wanneer is de datum van taxonomische publicatie voor {}?
@@ -8446,7 +8453,7 @@ P9221;Deens Adresregister-identificatiecode voor straat;{} heeft de Deens Adresr
 P9222;bashenc.online-identificatiecode;{} heeft de online-identificatiecode van {}.;Wat is de online-identificatiecode van {}?
 P9223;Provenio-identificatiecode (UUID);{} heeft de Provenio-identificatiecode (UUID) {}.;Wat is de Provenio-identificatiecode (UUID) van {}?
 P9224;JedeSchule.de-identificatiecode;{} heeft de JedeSchule.de-identificatiecode {}.;Wat is de JedeSchule.de-identificatiecode van {}?
-P9225;triple;{0} is burger van {1}.;{0} was een burger van welk land?
+P9225;triple;{} is burger van {}.;{} was een burger van welk land?
 P9226;ARAE-identificatiecode;{} heeft de ARAE-identificatiecode {}.;Wat is de ARAE-identificatiecode van {}?
 P9227;Encyclopedia Titanica-identificatiecode;{} heeft de Encyclopedia Titanica-identificatiecode {}.;Wat is de Encyclopedia Titanica-identificatiecode van {}?
 P9228;U.S. Masters Swimming-identificatiecode;{} heeft de U.S. Masters Swimming-identificatiecode {}.;Wat is de U.S. Masters Swimming-identificatiecode van {}?

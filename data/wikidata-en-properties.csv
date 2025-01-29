@@ -1,6 +1,11 @@
 key;value;sentence;question
-descriptions;descriptions;{}: {}.;What or who is described by {}?
-aliases;aliases;{} is also known as {}.; What is an alias for {}?
+descriptions;descriptions;{}: {}.;What is described by "{}"?
+person_descriptions;person_descriptions;{}: {}.;Who is described as "{}"?
+aliases;aliases;{} is also known as {}.;What is an alias for "{}"?
+person_aliases;person_aliases;{} is also known as {}.;Who has the alias "{}"?
+male_person;male_person;he;he
+female_person;female_person;she;she
+list;list;and;and
 P6;head of government;{} is the head of government of {}.;Who is the head of government of {}?
 P10;video;"{} has a video titled ""{}"".";What is the title of the video associated with {}?
 P14;traffic sign;{} has a traffic sign that indicates {}.;What does the traffic sign associated with {} indicate?
@@ -14,7 +19,7 @@ P21;sex or gender;{}'s sex or gender is {}.;What is the sex or gender of {}?
 P22;father;{}'s father is {}.;Who is the father of {}?
 P25;mother;{}'s mother is {}.;Who is the mother of {}?
 P26;spouse;{} is married to {}.;Who is the spouse of {}?
-P27;country of citizenship;{entity} is a citizen of {country}.;{entity} was a citizen of what country?
+P27;country of citizenship;{} is a citizen of {}.;{} was a citizen of what country?
 P30;continent;{} is located on the continent of {}.;On which continent is {} located?
 P31;instance of;{} is an instance of {}.;What type of entity or class is {} an instance of?
 P35;head of state;{} is the head of state of {}.;Who is the head of state of {}?
@@ -317,7 +322,7 @@ P506;ISO 15924 alpha-4 code;{} has an ISO 15924 alpha-4 code of {}.;What is the 
 P507;Swedish county code;{} has the Swedish county code {}.;What is the Swedish county code of {}?
 P508;BNCF Thesaurus ID;{} has a BNCF Thesaurus ID of {}.;What is the BNCF Thesaurus ID of {}?
 P509;cause of death;{} died due to {}.;What was the cause of death of {}?
-P511;honorific prefix;{Person} has the honorific prefix '{Prefix}'.;What is the honorific prefix of {Person}?
+P511;honorific prefix;{} has the honorific prefix '{}'.;What is the honorific prefix of {}?
 P512;academic degree;{} has an academic degree in {}.;What is the academic degree of {}?
 P514;interleaves with;{} interleaves with {}.;With what does {} interleave?
 P515;phase of matter;{} has a phase of matter of {}.;What is the phase of matter of {}?
@@ -369,7 +374,7 @@ P565;crystal habit;{} has a crystal habit of {}.;What is the crystal habit of {}
 P566;has basionym;{} has basionym {}.;What is the basionym of {}?
 P567;underlies;{} underlies {}.;What does {} underlie?
 P568;overlies;{} overlies {}.;What does {} overlie?
-P569;date of birth;{entity} was born on {date}.;When was {entity} born?
+P569;date of birth;{} was born on {}.;When was {} born?
 P570;date of death;{} died on {}.;When did {} die?
 P571;inception;{} has its inception on {}.;When did {} have its inception?
 P574;year of publication of scientific name for taxon;"""{}'s scientific name was published in the year {}.""";In what year was the scientific name of {} published?
@@ -1503,7 +1508,7 @@ P1914;gene insertion association with;{} has an association with gene insertion 
 P1915;gene inversion association with;{} has an association with gene inversion {}.;What is the gene inversion associated with {}?
 P1916;gene substitution association with;{} has a gene substitution association with {}.;What is the gene substitution association of {} with?
 P1917;posttranslational modification association with;{} has a posttranslational modification association with {}.;What does {} have a posttranslational modification association with?
-P1918;altered regulation leads to;{Subject} has altered regulation that leads to {Object}.;What does the altered regulation of {Subject} lead to?
+P1918;altered regulation leads to;{} has altered regulation that leads to {}.;What does the altered regulation of {} lead to?
 P1919;Ministry of Education of Chile school ID;{} has a school ID from the Ministry of Education of Chile.;What is the school ID of {} according to the Ministry of Education of Chile?
 P1920;CWGC burial ground ID;{} has a CWGC burial ground ID of {}.;What is the CWGC burial ground ID for {}?
 P1921;formatter URI for RDF resource;{} has a formatter URI for RDF resource at {}.;What is the formatter URI for RDF resource of {}?
@@ -2642,7 +2647,7 @@ P3146;CiNetMag person ID;{} has a CiNetMag person ID of {}.;What is the CiNetMat
 P3147;United States Reports ID;{} has a United States Reports ID of {}.;What is the United States Reports ID of {}?
 P3148;repeals;{} repeals {}.;What does {} repeal?
 P3149;molecule conformation;{} has a molecule conformation of {}.;What is the molecule conformation of {}?
-P3150;birthday;{entity} was born on {birthday}.;When was {entity} born?
+P3150;birthday;{} was born on {}.;When was {} born?
 P3151;iNaturalist taxon ID;{} has an iNaturalist taxon ID of {}.;What is the iNaturalist taxon ID of {}?
 P3152;Findsmiley ID;{} has a FindSmiley ID of {}.;What is the FindSmiley ID of {}?
 P3153;Open Funder Registry funder ID;{} has an Open Funder Registry funder ID of {}.;What is the Open Funder Registry funder ID of {}?
@@ -7621,7 +7626,7 @@ P8375;Crossref journal ID;{} has a Crossref journal ID of {}.;What is the Crossr
 P8376;Duden lexeme ID;{} has a Duden lexeme ID of {}.;What is the Duden lexeme ID of {}?
 P8377;Encyclopedia Tatarica (ru) Online ID;{} has an Encyclopedia Tatarica (ru) Online ID of {}.;What is the Encyclopedia Tatarica (ru) Online ID of {}?
 P8378;Dowker-Thistlethwaite notation;{} has a Dowker-Thistlethwaite notation of {}.;What is the Dowker-Thistlethwaite notation for {}?
-P8379;qualifier for this property;{entity} has a qualifier for {property}.;What is the qualifier for {property} of {entity}?
+P8379;qualifier for this property;{} has a qualifier for {}.;What is the qualifier for {}?
 P8380;Directory of Afrocubanas ID;{} has the Directory of Afrocubanas ID {}.;What is the Directory of Afrocubanas ID for {}?
 P8381;Emmys person ID;{} has an Emmy person ID of {}.;What is the Emmy person ID of {}?
 P8382;Finales Rugby ID;{} played in the final of Rugby ID {}.;In which Rugby ID final did {} play?
