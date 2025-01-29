@@ -1,22 +1,20 @@
 use chrono::NaiveDateTime;
-use rayon::prelude::*;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use serde::Deserialize;
-use serde_json::{json, Map, Value};
-use std::collections::{HashMap, HashSet};
+use serde_json::{Map, Value};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use dashmap::DashMap;
-use memmap2::{Mmap, MmapOptions};
+use memmap2::MmapOptions;
 
-mod batched_writer;
-use batched_writer::BatchedWriter;
-mod entity_resolver;
-use entity_resolver::EntityResolver;
+mod csv_writer_pool;
+use csv_writer_pool::CsvWriterPool;
+
 mod processing_error;
 use processing_error::ProcessingError;
 mod config;
@@ -24,9 +22,9 @@ use config::{get_configuration, Config};
 
 #[derive(Deserialize, Debug)]
 struct Sitelink {
-    title: String,               // The title of the page on the specific site
-    badges: Option<Vec<String>>, // Optional badges associated with the link
-    url: Option<String>,         // Optional URL of the page
+    // title: String,               // The title of the page on the specific site
+    // badges: Option<Vec<String>>, // Optional badges associated with the link
+    // url: Option<String>,         // Optional URL of the page
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,95 +38,8 @@ struct WikidataEntity {
     sitelinks: Option<HashMap<String, Sitelink>>,
 }
 
-fn get_entity_type_mappings() -> HashMap<&'static str, Vec<&'static str>> {
-    HashMap::from([
-        // human: https://www.wikidata.org/wiki/Q5
-        ("person", vec!["Q5"]),
-        // ("organization", vec!["Q43229"]),
-        // ("scientific_organization", vec!["Q16519632"]),
-        // ("research_institute", vec!["Q31855"]),
-        // ("government_agency", vec!["Q327333"]),
-        // ("event", vec!["Q1656682"]),
-        // (
-        //     "mood",
-        //     vec![
-        //         "Q331769",   // mood
-        //         "Q41537118", // emotional state
-        //         "Q3968640",  // mental state
-        //         "Q16748867", // basic emotion
-        //         "Q9415",     // emotions
-        //         "Q9332",     // behavior
-        //         "Q60539479", // positive emotion
-        //         "Q60539481", // negative emotion
-        //     ],
-        // ),
-    ])
-}
-
-fn get_default_properties() -> HashMap<&'static str, Vec<&'static str>> {
-    // let organization_props = vec![
-    //     "P31",   // Instance of
-    //     "P17",   // Country
-    //     "P112",  // Founder
-    //     "P571",  // Inception date
-    //     "P1813", // Short name
-    //     "P18",   // Image
-    //     "P154",  // Logo
-    //     "P159",  // Headquarters locations
-    //     "P856",  // Website
-    //     "P749",  // Parent organisation
-    //     "P1454", // Legal form
-    //     "P3220", // KvK company ID
-    //     "P452",  // industry
-    //     "P101",  // field of work
-    // ];
-    HashMap::from([
-        (
-            // Person-related properties
-            "person",
-            vec![
-                "P569", // Date of birth, https://www.wikidata.org/wiki/Property:P569
-                "P570", // Date of death, https://www.wikidata.org/wiki/Property:P570
-                "P27",  // Country of citizenship
-                "P106", // Occupation
-                // "P18",   // Image
-                "P39",   // Position held
-                "P1449", // Nickname
-                "P101",  // field of work
-            ],
-        ),
-        // ("organization", organization_props.clone()),
-        // ("scientific_organization", organization_props.clone()),
-        // ("research_institute", organization_props.clone()),
-        // ("government_agency", organization_props.clone()),
-        // (
-        //     // Event-related properties
-        //     "event",
-        //     vec![
-        //         "P585", // Point in time
-        //         "P17",  // Country
-        //         "P276", // Location
-        //         "P31",  // Instance of
-        //         "P18",  // Image
-        //     ],
-        // ),
-        // (
-        //     "mood",
-        //     vec![
-        //         "P31",   // Instance of
-        //         "P1552", // Has characteristic
-        //         "P1889", // Different from
-        //         "P461",  // Opposite of
-        //         "P460",  // Said to be the same as
-        //         "P1382", // Partially coincident with
-        //         "P18",   // Image
-        //     ],
-        // ),
-    ])
-}
-
 // Extracted progress printing for reusability
-fn print_progress(start_time: Instant, current_promille: u64, file_size: u64) {
+fn print_progress(start_time: Instant, current_promille: u64) {
     let elapsed = start_time.elapsed();
     let eta = if current_promille > 0 {
         let total_estimated_time = elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
@@ -160,13 +71,14 @@ fn prefill_cache(
 
     if !config.recreate_cache && Path::new(&output_file).exists() {
         // TODO Remove
-        return Ok(entity_map);
+        // return Ok(entity_map);
         // Load cache from disk
         let mut reader = csv::Reader::from_path(output_file)?;
         for result in reader.records() {
             let record = result?;
             entity_map.insert(record[0].to_string(), record[1].to_string());
         }
+        entity_map.shrink_to_fit();
         return Ok(entity_map);
     }
 
@@ -202,7 +114,7 @@ fn prefill_cache(
 
             if (current_promille - last_reported_promille.load(Ordering::Relaxed)) >= 1 {
                 last_reported_promille.store(current_promille, Ordering::Relaxed);
-                print_progress(start_time, current_promille, file_size);
+                print_progress(start_time, current_promille);
             }
 
             let json_str = line.trim_end_matches(',');
@@ -236,6 +148,7 @@ fn prefill_cache(
     }
     writer.flush()?;
 
+    entity_map.shrink_to_fit();
     Ok(entity_map)
 }
 
@@ -248,15 +161,50 @@ struct WikiProperties {
     question: String,
 }
 
+fn vec_to_and_string<T: AsRef<str>>(items: Vec<T>, delimiter: &str) -> String {
+    let len = items.len();
+
+    match len {
+        0 => String::new(),
+        1 => items[0].as_ref().to_string(),
+        _ => {
+            let mut joined = items[..len - 1]
+                .iter()
+                .map(|s| s.as_ref()) // Convert to &str
+                .collect::<Vec<&str>>()
+                .join(", ");
+
+            joined.push_str(&format!(" {} {}", delimiter, items[len - 1].as_ref()));
+            joined
+        }
+    }
+}
+
 fn process_wikidata(
     input_path: &String,
     config: &Config,
     resolver: DashMap<String, String>,
 ) -> Result<(), ProcessingError> {
-    let properties_file = PathBuf::from(format!("./data/wikidata-{}-properties.csv", config.lang,));
-    println!("Properties file: {:?}", properties_file);
+    // Additional, manually added property keys
+    const DESCRIPTIONS: &str = "descriptions";
+    const PERSON_DESCRIPTIONS: &str = "person_descriptions";
+    const ALIASES: &str = "aliases";
+    const PERSON_ALIASES: &str = "person_aliases";
+    // const MALE_PERSON: &str = "male_person";
+    // const FEMALE_PERSON: &str = "female_person";
+    const LIST: &str = "list";
+    const DATE_FORMAT: &str = "date_format";
+    const MISSING_DATE: &str = "missing_date";
 
-    let properties_map = DashMap::new();
+    let properties_file = PathBuf::from(format!("./data/wikidata-{}-properties.csv", config.lang,));
+    println!(
+        "Properties and input file: {:?}, {}",
+        properties_file, input_path
+    );
+
+    let csv_writers = CsvWriterPool::new(&format!("{}/{}", config.output_dir, config.lang));
+
+    let property_map = DashMap::new();
 
     let mut reader = csv::ReaderBuilder::new()
         .delimiter(b';')
@@ -265,7 +213,7 @@ fn process_wikidata(
     for result in reader.deserialize() {
         // println!("Record: {:?}", result);
         let record: WikiProperties = result?;
-        properties_map.insert(
+        property_map.insert(
             record.key.to_string(),
             (
                 record.value.to_string(),    // value
@@ -274,6 +222,16 @@ fn process_wikidata(
             ),
         );
     }
+
+    let and_symbol = property_map
+        .get(LIST)
+        .map_or("and".to_string(), |entry| entry.value().1.clone());
+    let date_format = property_map
+        .get(DATE_FORMAT)
+        .map_or("%Y-%m-%d".to_string(), |entry| entry.value().1.clone());
+    let missing_date = property_map
+        .get(MISSING_DATE)
+        .map_or("missing date".to_string(), |entry| entry.value().1.clone());
 
     // Open input file and get total file size for progress tracking
     let file = File::open(input_path).expect("JSON dump file not found");
@@ -307,7 +265,7 @@ fn process_wikidata(
 
             if (current_promille - last_reported_promille.load(Ordering::Relaxed)) >= 1 {
                 last_reported_promille.store(current_promille, Ordering::Relaxed);
-                print_progress(start_time, current_promille, file_size);
+                print_progress(start_time, current_promille);
             }
 
             let json_str = line.trim_end_matches(',');
@@ -318,88 +276,25 @@ fn process_wikidata(
 
             // Process entity
 
-            // Extract Labels
-            if let Some(labels) = &entity.labels {
-                if let Some(label_obj) = labels.get(&config.lang) {
-                    if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
-                        let mut sentences: Vec<String> = Vec::new();
-                        if let Some(descriptions) = &entity.descriptions {
-                            if let Some(description_obj) = descriptions.get(&config.lang) {
-                                if let Some(description) =
-                                    description_obj.get("value").and_then(|v| v.as_str())
-                                {
-                                    sentences.push(format!("{} is a {}", label, description));
-                                }
-                            }
-                        }
-                    }
-                    println!(
-                        "English Label: {:?}",
-                        serde_json::to_string_pretty(en_label).unwrap()
-                    );
-                } else {
-                    println!("No English label found.");
-                }
-                // Similarly for other languages if available
-                // if let Some(nl_label) = labels.get("nl") {
-                //     println!("Dutch Label: {:?}", serde_json::to_string_pretty(nl_label));
-                // }
-            } else {
-                println!("No labels found.");
-            }
-
             if let (
                 Some(claims),
                 Some(labels),
                 Some(descriptions),
                 Some(aliases),
-                Some(sitelinks),
+                // Some(sitelinks),
             ) = (
                 entity.claims,
                 entity.labels,
                 entity.descriptions,
                 entity.aliases,
-                entity.sitelinks,
+                // entity.sitelinks,
             ) {
                 if let Some(label_obj) = labels.get(&config.lang) {
                     if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
-                        let description = descriptions
-                            .get(&config.lang)
-                            // .or(descriptions.get("en"))
-                            .and_then(|obj| obj.get("value"))
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("");
-                        let aliases = aliases
-                            .get(&config.lang)
-                            .and_then(|value| value.as_array())
-                            .and_then(|values| {
-                                // dbg!(&values);
-                                Some(
-                                    values
-                                        .iter()
-                                        .map(|v| {
-                                            v.get("value").and_then(|v| v.as_str()).unwrap_or("")
-                                        })
-                                        .filter(|alias| *alias != label)
-                                        .collect::<Vec<&str>>(),
-                                )
-                            })
-                            .unwrap_or(Vec::new());
-                        let instance_of = claims.get("P31").and_then(|p31| p31.as_array()).map_or(
-                            Vec::new(),
-                            |instances| {
-                                instances
-                                    .iter()
-                                    .filter_map(|i| {
-                                        i["mainsnak"]["datavalue"]["value"]["id"]
-                                            .as_str()
-                                            .map(|instance| instance.to_string())
-                                    })
-                                    .collect()
-                            },
-                        );
+                        let mut sentences: Vec<String> = Vec::new();
+                        let mut questions: Vec<String> = Vec::new();
 
-                        let part_of = claims.get("P361").and_then(|p31| p31.as_array()).map_or(
+                        let instance_of = claims.get("P31").and_then(|p31| p31.as_array()).map_or(
                             Vec::new(),
                             |instances| {
                                 instances
@@ -417,56 +312,217 @@ fn process_wikidata(
                         //     "{}: {}, desc: {}, instance_of {:?}, claims: {:?}\n\n",
                         //     entity.id, label, description, instance_of, claims,
                         // );
-                        if instance_of.contains(&"Q5".to_string()) {
-                            println!("Entity: {}", entity.id);
-                            println!("Label: {}", label);
-                            println!("Desc: {}\n\n", description);
+
+                        // Q5 Human, Q15632617 Fictional Human
+                        let (male, female) = if instance_of.contains(&"Q5".to_string())
+                            || instance_of.contains(&"Q15632617".to_string())
+                        {
+                            let is_famous =
+                                entity.sitelinks.is_some() && !entity.sitelinks.unwrap().is_empty();
+                            if !is_famous {
+                                return Ok(()); // Skip non-famous humans.
+                            }
+                            //.contains_key("enwiki") {
+                            // Famous human, having at least one wikipage in his/her name.
+                            let gender = claims.get("P21").and_then(|p21| p21.as_array()).map_or(
+                                Vec::new(),
+                                |instances| {
+                                    instances
+                                        .iter()
+                                        .filter_map(|i| {
+                                            i["mainsnak"]["datavalue"]["value"]["id"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string())
+                                        })
+                                        .collect()
+                                },
+                            );
+                            let male = gender.contains(&"Q6581097".to_string());
+                            let female = gender.contains(&"Q6581072".to_string());
+
+                            // println!("Entity: {}", entity.id);
+                            // println!("Label: {}", label);
+                            // println!("Desc: {}\n\n", description);
                             // println!("Has English Wiki: {}", sitelinks.get("enwiki").);
                             // println!("{:?}", sitelinks);
                             // println!(
                             //     "{}: {}, instance_of {:?}, part_of {:?}, sitelinks: {:?}",
                             //     label, description, instance_of, part_of, sitelinks
                             // )
+                            (Some(male), Some(female))
+                        } else {
+                            (None, None)
+                        };
+                        let is_human = male.is_some() || female.is_some();
+
+                        let description = descriptions
+                            .get(&config.lang)
+                            // .or(descriptions.get("en"))
+                            .and_then(|obj| obj.get("value"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+
+                        match property_map.get(if is_human {
+                            PERSON_DESCRIPTIONS
+                        } else {
+                            DESCRIPTIONS
+                        }) {
+                            Some(values) => {
+                                let (_, sentence, question) = &*values;
+                                let sentence = sentence.replacen("{}", label, 1).replacen(
+                                    "{}",
+                                    description,
+                                    1,
+                                );
+                                let question = question.replace("{}", description);
+                                sentences.push(sentence);
+                                questions.push(question);
+                            }
+                            None => {}
+                        };
+
+                        let aliases = aliases
+                            .get(&config.lang)
+                            .and_then(|value| value.as_array())
+                            .and_then(|values| {
+                                // dbg!(&values);
+                                Some(
+                                    values
+                                        .iter()
+                                        .map(|v| {
+                                            v.get("value").and_then(|v| v.as_str()).unwrap_or("")
+                                        })
+                                        .filter(|alias| *alias != label)
+                                        .collect::<Vec<&str>>(),
+                                )
+                            })
+                            .unwrap_or(Vec::new());
+                        let alias_str = vec_to_and_string(aliases, and_symbol.as_str());
+                        // println!("{}: {}", label, alias_str);
+                        if !alias_str.is_empty() {
+                            match property_map.get(if is_human { PERSON_ALIASES } else { ALIASES })
+                            {
+                                Some(values) => {
+                                    let (_, sentence, question) = &*values;
+                                    let sentence = sentence.replacen("{}", label, 1).replacen(
+                                        "{}",
+                                        alias_str.as_str(),
+                                        1,
+                                    );
+                                    let question = question.replace("{}", alias_str.as_str());
+                                    sentences.push(sentence);
+                                    questions.push(question);
+                                }
+                                None => {}
+                            };
                         }
 
-                        // for entity_type in &config.entity_types {
-                        //     if let Some(instance_of) = entity_mappings.get(entity_type.as_str()) {
-                        //         if claims.get("P31").and_then(|p31| p31.as_array()).map_or(
-                        //             false,
-                        //             |instances| {
-                        //                 instances.iter().any(|i| {
-                        //                     if let Some(instance) =
-                        //                         i["mainsnak"]["datavalue"]["value"]["id"].as_str()
-                        //                     {
-                        //                         instance_of.contains(&instance)
-                        //                     } else {
-                        //                         false
-                        //                     }
-                        //                 })
-                        //             },
-                        //         ) {
-                        //             let (used_names, kv_entry) = prepare_data_export(
-                        //                 &resolver,
-                        //                 entity_type,
-                        //                 &entity.id,
-                        //                 &claims,
-                        //                 &default_properties,
-                        //                 label,
-                        //                 &aliases,
-                        //                 description,
-                        //             );
+                        // Process all claims
+                        for (property_key, value) in &claims {
+                            // println!("\n\n{}: {}", property_key, value);
+                            let property_value = value.as_array().map_or(Vec::new(), |instances| {
+                                instances
+                                    .iter()
+                                    .filter_map(|i| {
+                                        let media_type =
+                                            i["mainsnak"]["datavalue"]["type"].as_str();
+                                        // println!("Media type: {:?}", media_type);
 
-                        //             // Batch the writes
-                        //             let mut writer = batched_writer.lock().unwrap();
-                        //             write_entity_data(
-                        //                 &mut writer,
-                        //                 entity_type,
-                        //                 used_names,
-                        //                 kv_entry,
-                        //             )?;
-                        //         }
-                        //     }
-                        // }
+                                        match media_type.map(|instance| instance) {
+                                            Some("wikibase-entityid") => {
+                                                let id = i["mainsnak"]["datavalue"]["value"]["id"]
+                                                    .as_str()
+                                                    .map(|instance| instance.to_string());
+                                                let x = resolver.get(&id?).map(|r| r.clone());
+                                                if x.is_some() {
+                                                    x
+                                                } else {
+                                                    Some("UNKNOWN".to_string())
+                                                }
+                                            }
+                                            Some("external-id") => i["mainsnak"]["datavalue"]
+                                                ["value"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string()),
+                                            Some("monolingualtext") => i["mainsnak"]["datavalue"]
+                                                ["value"]["text"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string()),
+                                            Some("time") => {
+                                                let time = i["mainsnak"]["datavalue"]["value"]
+                                                    ["time"]
+                                                    .as_str()
+                                                    .map(|instance| instance.to_string());
+                                                if time.is_some() {
+                                                    Some(format_date(
+                                                        time.unwrap().as_str(),
+                                                        &date_format,
+                                                    ))
+                                                } else {
+                                                    Some(missing_date.clone())
+                                                }
+                                            }
+                                            Some("string") => i["mainsnak"]["datavalue"]["value"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string()),
+                                            Some("commonsMedia") => None,
+                                            None => {
+                                                if property_key == "P570" || property_key == "P569"
+                                                {
+                                                    Some(missing_date.clone())
+                                                } else {
+                                                    None
+                                                }
+                                            }
+                                            _ => i["mainsnak"]["datavalue"]["value"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string()),
+                                        }
+                                    })
+                                    .collect()
+                            });
+                            match property_map.get(property_key) {
+                                Some(values) => {
+                                    let (_, sentence, question) = &*values;
+
+                                    // println!(
+                                    //     "{}: {}, {}",
+                                    //     property_key,
+                                    //     value,
+                                    //     property_value.join(", ")
+                                    // );
+
+                                    let resolved_label =
+                                        vec_to_and_string(property_value, &and_symbol);
+
+                                    let sentence = sentence.replacen("{}", label, 1).replacen(
+                                        "{}",
+                                        resolved_label.as_str(),
+                                        1,
+                                    );
+                                    let question = question.replace("{}", label);
+                                    sentences.push(sentence);
+                                    questions.push(question);
+
+                                    // println!("{}: Sentences: {}", label, sentences.join("\n"));
+                                    // println!("{}: Last sentence: {:?}", label, sentences.last());
+                                }
+                                None => {}
+                            }
+                        }
+
+                        let category = instance_of
+                            .first()
+                            .and_then(|key| resolver.get(key).map(|r| r.value().clone())) // Ensure ownership
+                            .unwrap_or_else(|| "misc".to_string()); // Ensure the fallback is owned
+                                                                    // println!("{}: {}", label, category);
+                                                                    // println!("{}: Sentences: {}", label, sentences.join("\n"));
+                                                                    // println!("{}: Questions: {}", label, questions.join("\n"));
+
+                        csv_writers.write(
+                            &category,
+                            &[label, &sentences.join("\n"), &questions.join("\n")],
+                        );
                     }
                 }
             }
@@ -474,439 +530,25 @@ fn process_wikidata(
             Ok(())
         })?;
 
+    csv_writers.flush_all();
+
     // Clear progress line
     println!(
         "\rProcessing: 100% | Completed in {:.0}s                 ",
         start_time.elapsed().as_secs()
     );
 
-    // Write resolver to CSV at the end
-    // let mut writer = csv::Writer::from_path(output_file)?;
-    // for entry in entity_map.iter() {
-    //     writer.write_record(&[entry.key(), entry.value()])?;
-    // }
-    // writer.flush()?;
-
-    // let entity_mappings = get_entity_type_mappings();
-    // let default_properties = get_default_properties();
-
-    // // Initialize CSV writers
-    // let mut csv_writers: HashMap<String, csv::Writer<File>> = HashMap::new();
-    // for entity_type in &config.entity_types {
-    //     let csv_path = format!("{}/{}/{}.csv", config.output_dir, config.lang, entity_type);
-    //     csv_writers.insert(entity_type.clone(), csv::Writer::from_path(csv_path)?);
-    // }
-
-    // // Create a batched writer
-    // let batched_writer = BatchedWriter::new(csv_writers, 100);
-    // let batched_writer = Arc::new(Mutex::new(batched_writer));
-
-    // // Open input file and get total file size for progress tracking
-    // let file = File::open(input_path).expect("JSON dump file not found");
-    // let file_size = file.metadata()?.len();
-    // let reader = BufReader::new(file);
-
-    // // Progress tracking
-    // let start_time = Instant::now();
-    // let total_processed = AtomicU64::new(0);
-    // let last_reported_promille = AtomicU64::new(0);
-
-    // // Process file in parallel
-    // reader
-    //     .lines()
-    //     .par_bridge()
-    //     .try_for_each(|line_result| -> Result<(), ProcessingError> {
-    //         // Read line with thread-safe progress tracking
-    //         let line = match line_result {
-    //             Ok(line) => line,
-    //             Err(e) => return Err(ProcessingError::IoError(e)),
-    //         };
-
-    //         // Skip empty or array marker lines
-    //         if line.trim().is_empty() || line.starts_with('[') || line.starts_with(']') {
-    //             return Ok(());
-    //         }
-
-    //         // Update progress using atomic operations
-    //         let line_len = line.len() as u64;
-    //         let current_total = total_processed.fetch_add(line_len, Ordering::Relaxed) + line_len; // it returns the previous value, so add line_len
-    //         let current_promille = ((current_total as f64 / file_size as f64) * 1000.0) as u64;
-
-    //         // Report progress with 0.1% granularity
-    //         let last_promille = last_reported_promille.load(Ordering::Relaxed);
-    //         if (current_promille - last_promille) >= 1 {
-    //             // Use compare_exchange to ensure only one thread updates the progress
-    //             if last_reported_promille
-    //                 .compare_exchange(
-    //                     last_promille,
-    //                     current_promille,
-    //                     Ordering::SeqCst,
-    //                     Ordering::Relaxed,
-    //                 )
-    //                 .is_ok()
-    //             {
-    //                 let elapsed = start_time.elapsed();
-    //                 let eta = if current_promille > 0 {
-    //                     let total_estimated_time =
-    //                         elapsed.as_secs_f64() / (current_promille as f64 / 1000.0);
-    //                     Duration::from_secs_f64(total_estimated_time - elapsed.as_secs_f64())
-    //                 } else {
-    //                     Duration::from_secs(0)
-    //                 };
-
-    //                 print!(
-    //                     "\rProcessing: {:.1}% | Elapsed: {:.0}s | ETA: {:.0}s         ",
-    //                     current_promille as f64 / 10.0,
-    //                     elapsed.as_secs(),
-    //                     eta.as_secs()
-    //                 );
-    //                 std::io::stdout().flush()?;
-    //             }
-    //         }
-
-    //         // Remove trailing comma if present
-    //         let json_str = line.trim_end_matches(',');
-
-    //         // Parse entity
-    //         let entity: WikidataEntity = match serde_json::from_str(json_str) {
-    //             Ok(e) => e,
-    //             Err(_) => return Ok(()),
-    //         };
-    //         // if let Some(title) = entity.sitelinks["enwiki"]["title"].as_str() {
-    //         //     dbg!(title);
-    //         // }
-
-    //         // Process entity
-    //         if let (Some(claims), Some(labels), Some(descriptions), Some(aliases)) = (
-    //             entity.claims,
-    //             entity.labels,
-    //             entity.descriptions,
-    //             entity.aliases,
-    //         ) {
-    //             if let Some(label_obj) = labels.get(&config.lang) {
-    //                 if let Some(label) = label_obj.get("value").and_then(|v| v.as_str()) {
-    //                     let description = descriptions
-    //                         .get(&config.lang)
-    //                         // .or(descriptions.get("en"))
-    //                         .and_then(|obj| obj.get("value"))
-    //                         .and_then(|v| v.as_str())
-    //                         .unwrap_or("");
-    //                     let aliases = aliases
-    //                         .get(&config.lang)
-    //                         .and_then(|value| value.as_array())
-    //                         .and_then(|values| {
-    //                             // dbg!(&values);
-    //                             Some(
-    //                                 values
-    //                                     .iter()
-    //                                     .map(|v| {
-    //                                         v.get("value").and_then(|v| v.as_str()).unwrap_or("")
-    //                                     })
-    //                                     .filter(|alias| *alias != label)
-    //                                     .collect::<Vec<&str>>(),
-    //                             )
-    //                         })
-    //                         .unwrap_or(Vec::new());
-
-    //                     for entity_type in &config.entity_types {
-    //                         if let Some(instance_of) = entity_mappings.get(entity_type.as_str()) {
-    //                             if claims.get("P31").and_then(|p31| p31.as_array()).map_or(
-    //                                 false,
-    //                                 |instances| {
-    //                                     instances.iter().any(|i| {
-    //                                         if let Some(instance) =
-    //                                             i["mainsnak"]["datavalue"]["value"]["id"].as_str()
-    //                                         {
-    //                                             instance_of.contains(&instance)
-    //                                         } else {
-    //                                             false
-    //                                         }
-    //                                     })
-    //                                 },
-    //                             ) {
-    //                                 let (used_names, kv_entry) = prepare_data_export(
-    //                                     &resolver,
-    //                                     entity_type,
-    //                                     &entity.id,
-    //                                     &claims,
-    //                                     &default_properties,
-    //                                     label,
-    //                                     &aliases,
-    //                                     description,
-    //                                 );
-
-    //                                 // Batch the writes
-    //                                 let mut writer = batched_writer.lock().unwrap();
-    //                                 write_entity_data(
-    //                                     &mut writer,
-    //                                     entity_type,
-    //                                     used_names,
-    //                                     kv_entry,
-    //                                 )?;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         Ok(())
-    //     })?;
-
-    // // Final flush of any remaining entries
-    // batched_writer.lock().unwrap().finalize()?;
-
-    // // Clear progress line
-    // println!(
-    //     "\rProcessing: 100% | Completed in {:.0}s                 ",
-    //     start_time.elapsed().as_secs()
-    // );
-
     Ok(())
-}
-
-/// Prepare the data for export
-fn prepare_data_export(
-    resolver: &EntityResolver,
-    entity_type: &String,
-    entity_id: &str,
-    claims: &Map<String, Value>,
-    default_properties: &HashMap<&str, Vec<&str>>,
-    label: &str,
-    aliases: &Vec<&str>,
-    description: &str,
-) -> (Vec<String>, Value) {
-    let properties = &resolver.resolve_entity_ids(extract_properties(
-        entity_type,
-        &Value::Object(claims.clone()),
-        default_properties,
-    ));
-
-    let mut used_names = HashSet::with_capacity(6);
-    let mut ordered_names = vec![];
-    used_names.insert(label);
-
-    for key in ["P1813" /* Short name */, "P1449" /* Nickname */] {
-        if let Some(alt_name_val) = properties.get(key) {
-            if let Some(alt_name) = alt_name_val.as_str() {
-                if used_names.insert(alt_name) {
-                    ordered_names.push(alt_name.to_string());
-                }
-            }
-        }
-    }
-
-    for alias in aliases {
-        if used_names.insert(alias) {
-            ordered_names.push(alias.to_string());
-        }
-    }
-
-    let mut entity_data = serde_json::Map::new();
-    entity_data.insert("label".to_string(), json!(label));
-
-    // Conditionally add description if not empty
-    if !description.is_empty() {
-        entity_data.insert("descr".to_string(), json!(description));
-    }
-
-    // Conditionally add aliases if not empty
-    if !aliases.is_empty() {
-        entity_data.insert("alias".to_string(), json!(aliases));
-    }
-
-    // Always add properties
-    if properties.len() > 0 {
-        entity_data.insert("props".to_string(), json!(properties));
-    }
-
-    let kv_entry = json!({
-        entity_id: entity_data
-    });
-    (ordered_names, kv_entry)
 }
 
 // Helper function to format dates nicely
-fn format_date(date_str: &str) -> String {
-    if let Ok(date) = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%dT%H:%M:%SZ") {
-        date.format("%B %d, %Y").to_string()
-    } else {
-        date_str.to_string()
+fn format_date(date_str: &str, date_format: &str) -> String {
+    let cleaned_date = date_str.trim_start_matches('+'); // Remove leading '+'
+
+    match NaiveDateTime::parse_from_str(cleaned_date, "%Y-%m-%dT%H:%M:%SZ") {
+        Ok(date) => date.format(date_format).to_string(),
+        Err(_) => "Invalid date format".to_string(),
     }
-}
-
-fn write_entity_data(
-    batched_writer: &mut BatchedWriter,
-    entity_type: &str,
-    used_names: Vec<String>,
-    kv_entry: Value,
-) -> Result<(), ProcessingError> {
-    if let Value::Object(outer) = kv_entry {
-        let (_, person_data) = match outer.iter().next() {
-            Some(entry) => entry,
-            None => return Ok(()),
-        };
-
-        if let Value::Object(data) = person_data {
-            let name = data
-                .get("label")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
-
-            // Handle aliases
-            for used_name in used_names {
-                // println!("{}: {}", entity_type, used_name);
-                batched_writer.add_csv_entry(
-                    entity_type.to_string(),
-                    format!("{} is also known as {}.", name, used_name),
-                )?;
-            }
-
-            // Handle description
-            if let Some(Value::String(description)) = data.get("descr") {
-                batched_writer.add_csv_entry(
-                    entity_type.to_string(),
-                    format!("{} is a {}.", name, description.trim_matches('"')),
-                )?;
-            }
-
-            // Handle properties
-            if let Some(Value::Object(props)) = data.get("props") {
-                if let Some(Value::String(value)) = props.get("P101") {
-                    batched_writer.add_csv_entry(
-                        entity_type.to_string(),
-                        format!("{} works in the area of {}.", name, value),
-                    )?;
-                }
-
-                if let Some(Value::String(value)) = props.get("P106") {
-                    batched_writer.add_csv_entry(
-                        entity_type.to_string(),
-                        format!("{} is occupied as {}.", name, value),
-                    )?;
-                }
-
-                if let Some(Value::String(value)) = props.get("P27") {
-                    batched_writer.add_csv_entry(
-                        entity_type.to_string(),
-                        format!("{} is citizen of {}.", name, value),
-                    )?;
-                }
-
-                if let Some(Value::String(value)) = props.get("P569") {
-                    batched_writer.add_csv_entry(
-                        entity_type.to_string(),
-                        format!("{} was born on {}.", name, format_date(value)),
-                    )?;
-                }
-
-                if let Some(Value::String(value)) = props.get("P570") {
-                    batched_writer.add_csv_entry(
-                        entity_type.to_string(),
-                        format!("{} died on {}.", name, format_date(value)),
-                    )?;
-                }
-            }
-
-            batched_writer.add_kv_entry()?;
-        }
-    }
-
-    Ok(())
-}
-
-fn extract_properties(
-    entity_type: &str,
-    claims: &Value,
-    default_properties: &HashMap<&str, Vec<&str>>,
-) -> Map<String, Value> {
-    let mut properties = serde_json::Map::new();
-
-    match default_properties.get(entity_type) {
-        Some(all_properties) => {
-            for prop in all_properties {
-                if let Some(value) = claims
-                    .get(prop)
-                    .and_then(|p| p.as_array())
-                    .and_then(|array| array.get(0))
-                {
-                    match *prop {
-                        "P569" | "P570" | "P571" => {
-                            // Simplify date fields (e.g., P569 = Date of Birth, P570 = Date of Death)
-                            if let Some(date) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                                .and_then(|v| v.get("time"))
-                            {
-                                // Strip precision and metadata, and format date
-                                let simple_date =
-                                    date.as_str().unwrap_or("").trim_start_matches('+');
-                                properties.insert(
-                                    prop.to_string(),
-                                    Value::String(simple_date.to_string()),
-                                );
-                            }
-                        }
-                        "P17" | "P112" | "P27" | "P106" | "P39" | "P1454" | "P749" | "P101"
-                        | "P452" | "P276" | "P31" | "P585" | "P1552" | "P1889" | "P461"
-                        | "P460" | "P1382" => {
-                            // Handle string or entity-id properties (e.g., country, occupation, position)
-                            if let Some(id_value) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                                .and_then(|v| v.get("id"))
-                            {
-                                properties.insert(prop.to_string(), id_value.clone());
-                            }
-                        }
-                        "P159" => {
-                            // Extract location address or entity
-                            if let Some(location) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                            {
-                                properties.insert(prop.to_string(), location.clone());
-                            }
-                        }
-                        "P1813" | "P1449" => {
-                            // Extract short name or alias
-                            if let Some(short_name) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                                .and_then(|v| v.get("text"))
-                            {
-                                properties.insert(
-                                    prop.to_string(),
-                                    Value::String(short_name.as_str().unwrap_or("").to_string()),
-                                );
-                            }
-                        }
-                        "P856" | "P3220" => {
-                            // Extract URLs (P856 = Official website, P3220 = Google Maps ID)
-                            if let Some(url) = value
-                                .get("mainsnak")
-                                .and_then(|ms| ms.get("datavalue"))
-                                .and_then(|dv| dv.get("value"))
-                                .and_then(|v| v.as_str())
-                            {
-                                properties.insert(prop.to_string(), Value::String(url.to_string()));
-                            }
-                        }
-                        _ => {
-                            properties.insert(prop.to_string(), value.clone());
-                        }
-                    }
-                }
-            }
-        }
-        None => {}
-    }
-    properties
 }
 
 // fn main() -> Result<(), ProcessingError> {
