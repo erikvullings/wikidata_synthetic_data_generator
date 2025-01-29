@@ -29,9 +29,11 @@
       },
       "args": [
         "d:/data/wikidata/latest-all.json",
-        "-e person",
+        // "./data/latest-all.json",
+        // "-e person",
         // "-r",
-        "-o ./output",
+        "-o ./output.test",
+        // "-o ./output",
         "-f JSONLines"
       ],
       "cwd": "${workspaceFolder}"

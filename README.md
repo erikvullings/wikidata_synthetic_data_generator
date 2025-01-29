@@ -65,19 +65,19 @@ Unzip the data to `latest-all.json` using 7zip or some efficient unzipper that s
 Using English as the main language, recreating the cache:
 
 ```bash
-cargo run --release -- /d/data/wikidata/latest-all.json -l en -r -e person -o ./output
+cargo run --release -- /d/data/wikidata/latest-all.json -l en -r -o ./output
 ```
 
 Alternatively, specify the language, e.g. using Dutch:
 
 ```bash
-cargo run --release -- /d/data/wikidata/latest-all.json -l nl -e person -o ./output
+cargo run --release -- /d/data/wikidata/latest-all.json -l nl -o ./output
 ```
 
 Alternatively, on Windows:
 
 ```ps1
-cargo run --release D:\data\wikidata\latest-all.json -l en -e person -o ./output
+cargo run --release D:\data\wikidata\latest-all.json -l en -o ./output
 ```
 
 ## Queries

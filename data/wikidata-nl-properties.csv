@@ -1,6 +1,6 @@
 key;value;sentence;question
-descriptions;descriptions;{}: {}.;Wat is omschreven als "{}"?
-person_descriptions;person_descriptions;{}: {}.;Wie wordt omschreven als "{}"?
+descriptions;descriptions;{} is een {}.;Wat wordt omschreven als "{}"?
+person_descriptions;person_descriptions;{} is een {}.;Wie wordt omschreven als "{}"?
 aliases;aliases;{} staat ook bekend als {}.;Wat is een bijnaam voor "{}"?
 person_aliases;person_aliases;{} staat ook bekend als {}.;Wie gebruikt het alias "{}"?
 male_person;male_person;he;he
@@ -59,7 +59,7 @@ P101;werkveld;{} is actief in het werkveld van {}.;In welk werkveld is {} actief
 P102;lid van politieke partij;{} is lid van de politieke partij {}.;Voor welke politieke partij is {} lid?
 P103;moedertaal;{} spreekt als moedertaal {}.;Welke taal is de moedertaal van {}?
 P105;taxonomische rang;{} heeft de taxonomische rang van {}.;Wat is de taxonomische rang van {}?
-P106;beroep;{} is een {}.;Wat is de beroep van {}?
+P106;beroep;{} heeft gewerkt als {}.;Welk beroep of welke beroepen heeft {} gehad?
 P108;werkgever;{} heeft als werkgever {}.;Wie is de werkgever van {}?
 P109;handtekening;{} heeft de handtekening '{}'.;Wat is de handtekening van {}?
 P110;illustrator;{} is de illustrator van {}.;Wie is de illustrator van {}?
