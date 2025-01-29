@@ -6,6 +6,8 @@ person_aliases;person_aliases;{} staat ook bekend als {}.;Wie gebruikt het alias
 male_person;male_person;he;he
 female_person;female_person;she;she
 list;list;and;and
+date_format;date_format;%Y-%m-%d;%Y-%m-%d
+missing_date;missing_date;een onbekende datum;een onbekende datum
 P6;bestuurshoofd;{} is het bestuurshoofd van {}.;Wie is het bestuurshoofd van {}?
 P10;video;{} heeft een video.;Heeft {} een video?
 P14;wegbord;{} heeft een wegboord met de code {}.;Wat is de code van het wegboord dat bij {} hoort?
@@ -40,7 +42,7 @@ P59;sterrenbeeld;{} behoort tot het sterrenbeeld {}.;Tot welk sterrenbeeld behoo
 P61;ontdekker of uitvinder;{} is ontdekker of uitvinder van {}.;Wie is de ontdekker of uitvinder van {}?
 P65;locatie van astronomische ontdekking;{} is de locatie van astronomische ontdekking van {}.;Wat is de locatie van astronomische ontdekking van {}?
 P66;herkomstoord;{} is afkomstig uit {}.;Uit welk land komt {} oorspronkelijk?
-P69;opleiding gevolgd aan;{} heeft opleiding gevolgd aan {}.;Welke opleiding heeft {} gevolgd aan welk instituut of universiteit?
+P69;opleiding gevolgd aan;{} heeft een opleiding gevolgd aan {}.;Aan welk instituut of universiteit heeft {} zijn opleiding gevolgd?
 P78;topleveldomein;{} behoort tot het toplevel domein {}.;Tot welk toplevel domein behoort {}?
 P81;lijn;{} rijdt op lijn {}.;Op welke lijn rijdt {}?
 P84;architect;{} is ontworpen door {}.;Wie heeft {} ontworpen?

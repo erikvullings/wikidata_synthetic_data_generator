@@ -1,11 +1,13 @@
 key;value;sentence;question
-descriptions;descriptions;{}: {}.;What is described by "{}"?
+descriptions;descriptions;{} is a {}.;What is described by "{}"?
 person_descriptions;person_descriptions;{}: {}.;Who is described as "{}"?
 aliases;aliases;{} is also known as {}.;What is an alias for "{}"?
 person_aliases;person_aliases;{} is also known as {}.;Who has the alias "{}"?
 male_person;male_person;he;he
 female_person;female_person;she;she
 list;list;and;and
+date_format;date_format;%Y-%m-%d;%Y-%m-%d
+missing_date;missing_date;an unknown date;an unknown date
 P6;head of government;{} is the head of government of {}.;Who is the head of government of {}?
 P10;video;"{} has a video titled ""{}"".";What is the title of the video associated with {}?
 P14;traffic sign;{} has a traffic sign that indicates {}.;What does the traffic sign associated with {} indicate?
@@ -40,7 +42,7 @@ P59;constellation;{} is located in the constellation {}.;In which constellation 
 P61;discoverer or inventor;{} discovered or invented {}.;Who discovered or invented {}?
 P65;site of astronomical discovery;{} is the site of astronomical discovery of {}.;What is the site of astronomical discovery for {}?
 P66;ancestral home;{}'s ancestral home is {}.;What is the ancestral home of {}?
-P69;educated at;{} educated at {}.;Where did {} receive their education?
+P69;educated at;{} is educated at {}.;Where did {} receive his education?
 P78;top-level Internet domain;{} has a top-level Internet domain of {}.;What is the top-level Internet domain of {}?
 P81;connecting line;{} is connected by the line {}.;Which line connects {}?
 P84;architect;{} is designed by {}.;Who is the architect of {}?
