@@ -79,8 +79,18 @@ fn prefill_cache(
         let mut reader = csv::Reader::from_path(output_file)?;
         for result in reader.records() {
             let record = result?;
-            let key = record[0].replace("Q", "").parse::<u32>().unwrap();
-            entity_map.insert(key, record[1].to_string());
+            if !record[0].starts_with("Q") {
+                continue;
+            }
+            match record[0].replace("Q", "").parse::<u32>() {
+                Ok(key) => {
+                    entity_map.insert(key, record[1].to_string());
+                }
+                Err(_) => {
+                    println!("Failed to parse key: {:?}", record);
+                    continue;
+                }
+            }
         }
         entity_map.shrink_to_fit();
         return Ok(entity_map);
@@ -126,6 +136,10 @@ fn prefill_cache(
                 Ok(e) => e,
                 Err(_) => return Ok(()),
             };
+            if !entity.id.starts_with('Q') {
+                // println!("{:?}", entity);
+                return Ok(());
+            }
 
             if let Some(label) = entity
                 .labels
