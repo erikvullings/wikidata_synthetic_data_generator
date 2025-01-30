@@ -8,12 +8,15 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
+use utils::{format_coordinates, vec_to_and_string};
 
 use dashmap::DashMap;
 use memmap2::MmapOptions;
 
 mod csv_writer_pool;
 use csv_writer_pool::CsvWriterPool;
+
+mod utils;
 
 mod processing_error;
 use processing_error::ProcessingError;
@@ -60,7 +63,7 @@ fn print_progress(start_time: Instant, current_promille: u64) {
 fn prefill_cache(
     input_path: &String,
     config: &Config,
-) -> Result<DashMap<String, String>, ProcessingError> {
+) -> Result<DashMap<u32, String>, ProcessingError> {
     let output_file = PathBuf::from(format!(
         "{}/{}/entity_cache.csv",
         config.output_dir, config.lang,
@@ -76,7 +79,8 @@ fn prefill_cache(
         let mut reader = csv::Reader::from_path(output_file)?;
         for result in reader.records() {
             let record = result?;
-            entity_map.insert(record[0].to_string(), record[1].to_string());
+            let key = record[0].replace("Q", "").parse::<u32>().unwrap();
+            entity_map.insert(key, record[1].to_string());
         }
         entity_map.shrink_to_fit();
         return Ok(entity_map);
@@ -129,7 +133,8 @@ fn prefill_cache(
                 .and_then(|label_obj| label_obj.get("value")?.as_str().map(|s| s.to_string()))
             {
                 // println!("{}, {}", entity.id, &label);
-                entity_map.insert(entity.id, label);
+                let key = entity.id.replace("Q", "").parse::<u32>().unwrap();
+                entity_map.insert(key, label);
             }
 
             Ok(())
@@ -144,7 +149,7 @@ fn prefill_cache(
     // Write resolver to CSV at the end
     let mut writer = csv::Writer::from_path(output_file)?;
     for entry in entity_map.iter() {
-        writer.write_record(&[entry.key(), entry.value()])?;
+        writer.write_record(&[&format!("Q{}", entry.key()), entry.value()])?;
     }
     writer.flush()?;
 
@@ -161,29 +166,10 @@ struct WikiProperties {
     question: String,
 }
 
-fn vec_to_and_string<T: AsRef<str>>(items: Vec<T>, delimiter: &str) -> String {
-    let len = items.len();
-
-    match len {
-        0 => String::new(),
-        1 => items[0].as_ref().to_string(),
-        _ => {
-            let mut joined = items[..len - 1]
-                .iter()
-                .map(|s| s.as_ref()) // Convert to &str
-                .collect::<Vec<&str>>()
-                .join(", ");
-
-            joined.push_str(&format!(" {} {}", delimiter, items[len - 1].as_ref()));
-            joined
-        }
-    }
-}
-
 fn process_wikidata(
     input_path: &String,
     config: &Config,
-    resolver: DashMap<String, String>,
+    resolver: DashMap<u32, String>,
 ) -> Result<(), ProcessingError> {
     // Additional, manually added property keys
     const DESCRIPTIONS: &str = "descriptions";
@@ -194,7 +180,7 @@ fn process_wikidata(
     // const FEMALE_PERSON: &str = "female_person";
     const LIST: &str = "list";
     const DATE_FORMAT: &str = "date_format";
-    const MISSING_DATE: &str = "missing_date";
+    // const MISSING_DATE: &str = "missing_date";
 
     let properties_file = PathBuf::from(format!("./data/wikidata-{}-properties.csv", config.lang,));
     println!(
@@ -229,9 +215,9 @@ fn process_wikidata(
     let date_format = property_map
         .get(DATE_FORMAT)
         .map_or("%Y-%m-%d".to_string(), |entry| entry.value().1.clone());
-    let missing_date = property_map
-        .get(MISSING_DATE)
-        .map_or("missing date".to_string(), |entry| entry.value().1.clone());
+    // let missing_date = property_map
+    //     .get(MISSING_DATE)
+    //     .map_or("missing date".to_string(), |entry| entry.value().1.clone());
 
     // Open input file and get total file size for progress tracking
     let file = File::open(input_path).expect("JSON dump file not found");
@@ -430,20 +416,88 @@ fn process_wikidata(
 
                                         match media_type.map(|instance| instance) {
                                             Some("wikibase-entityid") => {
-                                                let id = i["mainsnak"]["datavalue"]["value"]["id"]
+                                                match i["mainsnak"]["datavalue"]["value"]
+                                                    ["numeric-id"]
                                                     .as_str()
-                                                    .map(|instance| instance.to_string());
-                                                let x = resolver.get(&id?).map(|r| r.clone());
-                                                if x.is_some() {
-                                                    x
-                                                } else {
-                                                    Some("UNKNOWN".to_string())
+                                                    .map(|instance| instance.parse::<u32>())
+                                                {
+                                                    Some(Ok(id)) => {
+                                                        resolver.get(&id).map(|r| r.clone())
+                                                    }
+                                                    _ => None,
                                                 }
                                             }
                                             Some("external-id") => i["mainsnak"]["datavalue"]
                                                 ["value"]
                                                 .as_str()
                                                 .map(|instance| instance.to_string()),
+                                            Some("globecoordinate") => {
+                                                let lat = i["mainsnak"]["datavalue"]["value"]
+                                                    ["latitude"]
+                                                    .as_number()
+                                                    .map(|instance| instance.to_string());
+                                                let lon = i["mainsnak"]["datavalue"]["value"]
+                                                    ["longitude"]
+                                                    .as_number()
+                                                    .map(|instance| instance.to_string());
+                                                let alt = i["mainsnak"]["datavalue"]["value"]
+                                                    ["altitude"]
+                                                    .as_number()
+                                                    .map(|instance| instance.to_string());
+                                                // println!("{}: {:?}, {:?}, {:?}", label, i["mainsnak"]["datavalue"]["value"], lat, lon);
+                                                if lat.is_some() && lon.is_some() {
+                                                    Some(format_coordinates(
+                                                        lat.unwrap().as_str(),
+                                                        lon.unwrap().as_str(),
+                                                        alt.as_deref(),
+                                                    ))
+                                                } else {
+                                                    None
+                                                }
+                                            }
+                                            Some("quantity") => {
+                                                let amount = i["mainsnak"]["datavalue"]["value"]
+                                                    ["amount"]
+                                                    .as_str()
+                                                    .map(|instance| instance.to_string());
+                                                let unit = i["mainsnak"]["datavalue"]["value"]
+                                                    ["unit"]
+                                                    .as_str()
+                                                    .map(|instance| instance.to_string());
+                                                if let (Some(amount), Some(unit)) = (amount, unit) {
+                                                    match unit.as_str() {
+                                                        "1" => Some(amount),
+                                                        _ if unit.starts_with(
+                                                            "http://www.wikidata.org/entity/Q",
+                                                        ) =>
+                                                        {
+                                                            match unit.replace(
+                                                                "http://www.wikidata.org/entity/Q",
+                                                                "",
+                                                            ).parse::<u32>() {
+                                                                Ok(id) => {
+                                                                    let x = resolver.get(&id).map(|r| r.clone());
+                                                                    let result = Some(format!(
+                                                                        "{} {}",
+                                                                        amount,
+                                                                        if x.is_some() {
+                                                                            x.unwrap()
+                                                                        } else {
+                                                                            unit
+                                                                        }
+                                                                    ));
+                                                                    // println!("{}: {:?} - {:?}", label, id, result);
+                                                                    result
+                                                                }
+                                                                _ => None
+                                                            }
+                                                        }
+                                                        _ => None,
+                                                    }
+                                                } else {
+                                                    None
+                                                }
+                                            }
                                             Some("monolingualtext") => i["mainsnak"]["datavalue"]
                                                 ["value"]["text"]
                                                 .as_str()
@@ -459,20 +513,24 @@ fn process_wikidata(
                                                         &date_format,
                                                     ))
                                                 } else {
-                                                    Some(missing_date.clone())
+                                                    None
+                                                    // Some(missing_date.clone())
                                                 }
                                             }
                                             Some("string") => i["mainsnak"]["datavalue"]["value"]
                                                 .as_str()
                                                 .map(|instance| instance.to_string()),
-                                            Some("commonsMedia") => None,
+                                            Some("commonsMedia") =>  i["mainsnak"]["datavalue"]["value"]
+                                                .as_str()
+                                                .map(|instance| instance.to_string()),
                                             None => {
-                                                if property_key == "P570" || property_key == "P569"
-                                                {
-                                                    Some(missing_date.clone())
-                                                } else {
-                                                    None
-                                                }
+                                                // if property_key == "P570" || property_key == "P569"
+                                                // {
+                                                //     Some(missing_date.clone())
+                                                // } else {
+                                                //     None
+                                                // }
+                                                None
                                             }
                                             _ => i["mainsnak"]["datavalue"]["value"]
                                                 .as_str()
@@ -481,6 +539,9 @@ fn process_wikidata(
                                     })
                                     .collect()
                             });
+                            if property_value.is_empty() {
+                                continue;
+                            }
                             match property_map.get(property_key) {
                                 Some(values) => {
                                     let (_, sentence, question) = &*values;
@@ -500,7 +561,9 @@ fn process_wikidata(
                                         resolved_label.as_str(),
                                         1,
                                     );
-                                    let question = question.replace("{}", label);
+                                    let question = question.replace("{}", label)
+                                        + format!(" [{}]", resolved_label).as_str();
+                                    // println!("Question: {}: {}", label, question);
                                     sentences.push(sentence);
                                     questions.push(question);
 
@@ -513,12 +576,13 @@ fn process_wikidata(
 
                         let category = instance_of
                             .first()
-                            .and_then(|key| resolver.get(key).map(|r| r.value().clone())) // Ensure ownership
+                            .map(|key| key.replace("Q","").parse::<u32>().unwrap_or(0))
+                            .and_then(|key| resolver.get(&key).map(|r| r.value().clone())) // Ensure ownership
                             .unwrap_or_else(|| "misc".to_string()); // Ensure the fallback is owned
-                                                                    // println!("{}: {}", label, category);
-                                                                    // println!("{}: Sentences: {}", label, sentences.join("\n"));
-                                                                    // println!("{}: Questions: {}", label, questions.join("\n"));
-
+                        // println!("{}: {}", label, category);
+                        // println!("{}: Sentences: {}", label, sentences.join("\n"));
+                        // println!("{}: Questions: {}", label, questions.join("\n"));
+                        // println!("{}: {:?}", category, instance_of);
                         csv_writers.write(
                             &category,
                             &[label, &sentences.join("\n"), &questions.join("\n")],
