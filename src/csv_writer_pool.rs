@@ -42,6 +42,7 @@ impl CsvWriterPool {
                 // Use WriterBuilder to set semi-colon delimiter
                 let mut writer = WriterBuilder::new()
                     .delimiter(b';') // Set semi-colon as delimiter
+                    .quote_style(csv::QuoteStyle::Necessary)
                     .from_writer(BufWriter::new(file));
                 writer
                     .write_record(&["label", "sentences", "questions"])

@@ -1,8 +1,8 @@
 key;value;sentence;question
-descriptions;descriptions;{} is een {}.;Wat wordt omschreven als "{}"?
-person_descriptions;person_descriptions;{} is een {}.;Wie wordt omschreven als "{}"?
-aliases;aliases;{} staat ook bekend als {}.;Wat is een bijnaam voor "{}"?
-person_aliases;person_aliases;{} staat ook bekend als {}.;Wie gebruikt het alias "{}"?
+descriptions;descriptions;{} is een {}.;Geef een omschrijving van "{}"?
+person_descriptions;person_descriptions;{} is een {}.;Geef een omschrijving van "{}"?
+aliases;aliases;{} staat ook bekend als {}.;Geen een of meer bijnamen voor "{}"?
+person_aliases;person_aliases;{} staat ook bekend als {}.;Geef een of meer bijnamen voor "{}"?
 male_person;male_person;he;he
 female_person;female_person;she;she
 list;list;and;and
@@ -60,7 +60,7 @@ P102;lid van politieke partij;{} is lid van de politieke partij {}.;Voor welke p
 P103;moedertaal;{} spreekt als moedertaal {}.;Welke taal is de moedertaal van {}?
 P105;taxonomische rang;{} heeft de taxonomische rang van {}.;Wat is de taxonomische rang van {}?
 P106;beroep;{} heeft gewerkt als {}.;Welk beroep of welke beroepen heeft {} gehad?
-P108;werkgever;{} heeft als werkgever {}.;Wie is de werkgever van {}?
+P108;werkgever;{} heeft als werkgever {}.;Wie waren de werkgevers van {}?
 P109;handtekening;{} heeft de handtekening '{}'.;Wat is de handtekening van {}?
 P110;illustrator;{} is de illustrator van {}.;Wie is de illustrator van {}?
 P111;gemeten natuurkundige grootheid;{} heeft de gemeten natuurkundige grootheid van {}.;Wat is de gemeten natuurkundige grootheid van {}?
@@ -104,7 +104,7 @@ P169;bestuursvoorzitter;{} is bestuursvoorzitter van {}.;Wie is de bestuursvoorz
 P170;maker;{} is gemaakt door {}.;Door wie werd {} gemaakt?
 P171;moedertaxon;{} is de moeder van {}.;Wie is de moeder van {}?
 P172;etnische groep;{} behoort tot de etnische groep {}.;Tot welke etnische groep behoort {}?
-P175;uitvoerend artiest;{} is uitvoerend artiest van {}.;Wat is de uitvoerende artistiek rol van {}?
+P175;uitvoerend artiest;{} wordt uitgevoerd door {}.;Wie voert {} uit?
 P176;fabrikant;{} is fabrikant van {}.;Voor welke producten of merken is {} de fabrikant?
 P177;overspant;{} overspant over {}.;Over welke objecten overspant {}?
 P178;ontwikkelaar;{} is ontwikkelaar van {}.;Wat heeft {} als ontwikkelaar gedaan?

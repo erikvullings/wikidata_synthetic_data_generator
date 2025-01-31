@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -8,7 +7,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
-use utils::{format_coordinates, vec_to_and_string};
+use utils::{format_coordinates, format_date, generate_text, lowercase_first};
 
 use dashmap::DashMap;
 use memmap2::MmapOptions;
@@ -300,9 +299,9 @@ fn process_wikidata(
                                 instances
                                     .iter()
                                     .filter_map(|i| {
-                                        i["mainsnak"]["datavalue"]["value"]["id"]
-                                            .as_str()
-                                            .map(|instance| instance.to_string())
+                                        i["mainsnak"]["datavalue"]["value"]["numeric-id"]
+                                            .as_number()
+                                            .map(|instance| instance.as_u64().unwrap_or(0))
                                     })
                                     .collect()
                             },
@@ -314,8 +313,8 @@ fn process_wikidata(
                         // );
 
                         // Q5 Human, Q15632617 Fictional Human
-                        let (male, female) = if instance_of.contains(&"Q5".to_string())
-                            || instance_of.contains(&"Q15632617".to_string())
+                        let (male, female) = if instance_of.contains(&5)
+                            || instance_of.contains(&15632617)
                         {
                             let is_famous =
                                 entity.sitelinks.is_some() && !entity.sitelinks.unwrap().is_empty();
@@ -326,13 +325,13 @@ fn process_wikidata(
                             // Famous human, having at least one wikipage in his/her name.
                             let gender = claims.get("P21").and_then(|p21| p21.as_array()).map_or(
                                 Vec::new(),
-                                |instances| {
-                                    instances
+                                |genders| {
+                                    genders
                                         .iter()
                                         .filter_map(|i| {
                                             i["mainsnak"]["datavalue"]["value"]["id"]
                                                 .as_str()
-                                                .map(|instance| instance.to_string())
+                                                .map(|gender| gender.to_string())
                                         })
                                         .collect()
                                 },
@@ -355,31 +354,16 @@ fn process_wikidata(
                         };
                         let is_human = male.is_some() || female.is_some();
 
-                        let description = descriptions
+                        let description = lowercase_first(descriptions
                             .get(&config.lang)
-                            // .or(descriptions.get("en"))
                             .and_then(|obj| obj.get("value"))
                             .and_then(|v| v.as_str())
-                            .unwrap_or("");
+                            .unwrap_or(""));
 
-                        match property_map.get(if is_human {
-                            PERSON_DESCRIPTIONS
-                        } else {
-                            DESCRIPTIONS
-                        }) {
-                            Some(values) => {
-                                let (_, sentence, question) = &*values;
-                                let sentence = sentence.replacen("{}", label, 1).replacen(
-                                    "{}",
-                                    description,
-                                    1,
-                                );
-                                let question = question.replace("{}", description);
-                                sentences.push(sentence);
-                                questions.push(question);
-                            }
-                            None => {}
-                        };
+                        if !description.is_empty() {
+                            let prop_key = if is_human { PERSON_DESCRIPTIONS } else { DESCRIPTIONS };
+                            generate_text(&property_map, &mut sentences, &mut questions, &and_symbol, prop_key, label, &vec![&description]);
+                        }
 
                         let aliases = aliases
                             .get(&config.lang)
@@ -397,47 +381,32 @@ fn process_wikidata(
                                 )
                             })
                             .unwrap_or(Vec::new());
-                        let alias_str = vec_to_and_string(aliases, and_symbol.as_str());
                         // println!("{}: {}", label, alias_str);
-                        if !alias_str.is_empty() {
-                            match property_map.get(if is_human { PERSON_ALIASES } else { ALIASES })
-                            {
-                                Some(values) => {
-                                    let (_, sentence, question) = &*values;
-                                    let sentence = sentence.replacen("{}", label, 1).replacen(
-                                        "{}",
-                                        alias_str.as_str(),
-                                        1,
-                                    );
-                                    let question = question.replace("{}", alias_str.as_str());
-                                    sentences.push(sentence);
-                                    questions.push(question);
-                                }
-                                None => {}
-                            };
+                        if !aliases.is_empty() {
+                            let prop_key = if is_human { PERSON_ALIASES } else { ALIASES };
+                            generate_text(&property_map, &mut sentences, &mut questions, &and_symbol, prop_key, label, &aliases);
                         }
 
                         // Process all claims
-                        for (property_key, value) in &claims {
-                            // println!("\n\n{}: {}", property_key, value);
-                            let property_value = value.as_array().map_or(Vec::new(), |instances| {
+                        for (prop_key, value) in &claims {
+                            let prop_value = value.as_array().map_or(Vec::new(), |instances| {
                                 instances
                                     .iter()
                                     .filter_map(|i| {
                                         let media_type =
                                             i["mainsnak"]["datavalue"]["type"].as_str();
-                                        // println!("Media type: {:?}", media_type);
 
                                         match media_type.map(|instance| instance) {
                                             Some("wikibase-entityid") => {
                                                 match i["mainsnak"]["datavalue"]["value"]
                                                     ["numeric-id"]
-                                                    .as_str()
-                                                    .map(|instance| instance.parse::<u32>())
+                                                    .as_number()
+                                                    .map(|instance| instance.as_u64().unwrap_or(0))
                                                 {
-                                                    Some(Ok(id)) => {
-                                                        resolver.get(&id).map(|r| r.clone())
+                                                    Some(id) => {
+                                                        resolver.get(&(id as u32)).map(|r| r.clone())
                                                     }
+                                                    // _ => Some(i["mainsnak"]["datavalue"]["value"]["numeric-id"].as_number().to_string()),
                                                     _ => None,
                                                 }
                                             }
@@ -537,15 +506,7 @@ fn process_wikidata(
                                             Some("commonsMedia") =>  i["mainsnak"]["datavalue"]["value"]
                                                 .as_str()
                                                 .map(|instance| instance.to_string()),
-                                            None => {
-                                                // if property_key == "P570" || property_key == "P569"
-                                                // {
-                                                //     Some(missing_date.clone())
-                                                // } else {
-                                                //     None
-                                                // }
-                                                None
-                                            }
+                                            None => None,
                                             _ => i["mainsnak"]["datavalue"]["value"]
                                                 .as_str()
                                                 .map(|instance| instance.to_string()),
@@ -553,44 +514,14 @@ fn process_wikidata(
                                     })
                                     .collect()
                             });
-                            if property_value.is_empty() {
-                                continue;
-                            }
-                            match property_map.get(property_key) {
-                                Some(values) => {
-                                    let (_, sentence, question) = &*values;
-
-                                    // println!(
-                                    //     "{}: {}, {}",
-                                    //     property_key,
-                                    //     value,
-                                    //     property_value.join(", ")
-                                    // );
-
-                                    let resolved_label =
-                                        vec_to_and_string(property_value, &and_symbol);
-
-                                    let sentence = sentence.replacen("{}", label, 1).replacen(
-                                        "{}",
-                                        resolved_label.as_str(),
-                                        1,
-                                    );
-                                    let question = question.replace("{}", label)
-                                        + format!(" [{}]", resolved_label).as_str();
-                                    // println!("Question: {}: {}", label, question);
-                                    sentences.push(sentence);
-                                    questions.push(question);
-
-                                    // println!("{}: Sentences: {}", label, sentences.join("\n"));
-                                    // println!("{}: Last sentence: {:?}", label, sentences.last());
-                                }
-                                None => {}
+                            if !prop_value.is_empty() {
+                                generate_text(&property_map, &mut sentences, &mut questions, &and_symbol, prop_key, label, &prop_value);
                             }
                         }
 
                         let category = instance_of
                             .first()
-                            .map(|key| key.replace("Q","").parse::<u32>().unwrap_or(0))
+                            .map(|key| *key as u32)
                             .and_then(|key| resolver.get(&key).map(|r| r.value().clone())) // Ensure ownership
                             .unwrap_or_else(|| "misc".to_string()); // Ensure the fallback is owned
                         // println!("{}: {}", label, category);
@@ -617,16 +548,6 @@ fn process_wikidata(
     );
 
     Ok(())
-}
-
-// Helper function to format dates nicely
-fn format_date(date_str: &str, date_format: &str) -> String {
-    let cleaned_date = date_str.trim_start_matches('+'); // Remove leading '+'
-
-    match NaiveDateTime::parse_from_str(cleaned_date, "%Y-%m-%dT%H:%M:%SZ") {
-        Ok(date) => date.format(date_format).to_string(),
-        Err(_) => "Invalid date format".to_string(),
-    }
 }
 
 // fn main() -> Result<(), ProcessingError> {

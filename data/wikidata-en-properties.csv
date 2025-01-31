@@ -1,8 +1,8 @@
 key;value;sentence;question
-descriptions;descriptions;{} is a {}.;What is described by "{}"?
-person_descriptions;person_descriptions;{} is a {}.;Who is described as "{}"?
-aliases;aliases;{} is also known as {}.;What is an alias for "{}"?
-person_aliases;person_aliases;{} is also known as {}.;Who has the alias "{}"?
+descriptions;descriptions;{} is a {}.;Give a description of "{}"?
+person_descriptions;person_descriptions;{} is a {}.;Give a description of "{}"?
+aliases;aliases;{} is also known as {}.;Give one or more aliases for "{}"?
+person_aliases;person_aliases;{} is also known as {}.;Give one or more aliases for "{}"?
 male_person;male_person;he;he
 female_person;female_person;she;she
 list;list;and;and
@@ -60,7 +60,7 @@ P102;member of political party;{} is a member of the political party {}.;Which p
 P103;native language;{}'s native language is {}.;What is the native language of {}?
 P105;taxon rank;{} has a taxon rank of {}.;What is the taxon rank of {}?
 P106;occupation;{} has been working as a {}.;What is the occupation of {}?
-P108;employer;{} is employed by {}.;Which company or organization does {} work for?
+P108;employer;{} is employed by {}.;Which companies or organizations did {} work for?
 P109;signature;{} has a signature that looks like this: {}.;What does the signature of {} look like?
 P110;illustrator;{} is illustrated by {}.;Who is the illustrator of {}?
 P111;measured physical quantity;{} has a measured physical quantity of {}.;What is the measured physical quantity of {}?
@@ -104,7 +104,7 @@ P169;chief executive officer;{} is the chief executive officer of {}.;Who is the
 P170;creator;{} is created by {}.;Who created {}?
 P171;parent taxon;{} is a parent taxon of {}.;What is the parent taxon of {}?
 P172;ethnic group;{} belongs to the ethnic group {}.;To which ethnic group does {} belong?
-P175;performer;{} performed {}.;What did {} perform?
+P175;performer;{} is performed by {}.;Who did perform {}?
 P176;manufacturer;{} is manufactured by {}.;Which company manufactures {}?
 P177;crosses;{} crosses {}.;What does {} cross?
 P178;developer;{} is developed by {}.;Who developed {}?
