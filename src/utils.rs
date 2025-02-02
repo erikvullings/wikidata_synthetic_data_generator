@@ -50,7 +50,7 @@ pub fn format_date(date_str: &str, date_format: &str) -> String {
 
     match NaiveDateTime::parse_from_str(cleaned_date, "%Y-%m-%dT%H:%M:%SZ") {
         Ok(date) => date.format(date_format).to_string(),
-        Err(_) => date_str.to_string(),
+        Err(_) => cleaned_date.replace("-00-00T00:00:00Z", ""), // In case only the year is published
     }
 }
 
