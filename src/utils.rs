@@ -99,10 +99,10 @@ pub fn lowercase_first(s: &str) -> String {
 
 /// Adjust the English article "a" to "an" if the next word starts with a vowel.
 pub fn adjust_article(first: &str, second: &str) -> String {
-    if first.ends_with(" a {}") && second.chars().next().map_or(false, |c| "aeiou".contains(c)) {
+    if first.ends_with(" a {}.") && second.chars().next().map_or(false, |c| "aeiou".contains(c)) {
         let mut adjusted = first.to_string();
-        adjusted.truncate(first.len() - 4); // Remove " a {}"
-        adjusted.push_str(" an {}");
+        adjusted.truncate(first.len() - 5); // Remove " a {}."
+        adjusted.push_str(" an {}.");
         adjusted
     } else {
         first.to_string()
