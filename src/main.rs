@@ -528,10 +528,12 @@ fn process_wikidata(
                         // println!("{}: Sentences: {}", label, sentences.join("\n"));
                         // println!("{}: Questions: {}", label, questions.join("\n"));
                         // println!("{}: {:?}", category, instance_of);
-                        csv_writers.write(
-                            &category,
-                            &[label, &sentences.join("\n"), &questions.join("\n")],
-                        );
+                        if !sentences.is_empty() || !questions.is_empty() {
+                            csv_writers.write(
+                                &category,
+                                &[label, &sentences.join("\n"), &questions.join("\n")],
+                            );
+                        }
                     }
                 }
             }
