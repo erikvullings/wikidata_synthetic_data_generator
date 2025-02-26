@@ -80,6 +80,16 @@ Alternatively, on Windows:
 cargo run --release D:\data\wikidata\latest-all.json -l en -o ./output
 ```
 
+## Extracting names
+
+The output will contain a `human.csv` file, containing information about non-private humans, i.e. people who have been linked to Wikipedia articles.
+To extract names and aliases from this file, you can use the following Python script:
+
+```bash
+chmod +x extract_aliases.py
+./extract_aliases.py < output/en/human.csv > output/en/names_aliases.csv
+```
+
 ## Queries
 
 [Script source](https://github.com/kermitt2/grisp/blob/master/scripts/wikipedia-resources.sh).
