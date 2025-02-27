@@ -23,7 +23,7 @@ P25;moeder;{} is de moeder van {}.;Wie is de moeder van {}?
 P26;huwelijkspartner;{} is getrouwd met {}.;Wie is de echtgenoot/echtgenote van {}?
 P27;land van nationaliteit;{} heeft de nationaliteit van {}.;Wat is het land van nationaliteit van {}?
 P30;continent;{} bevindt zich op het continent {}.;Op welk continent bevindt zich {}?
-P31;is een;{} is een {}.;Wat is de {} van {}?
+P31;is een;{} is een type {}.;Wat voor een typering(-en) heeft {}?
 P35;staatshoofd;{} is staatschef van {}.;Wie was de staatshoofd van {}?
 P36;hoofdplaats;{} is hoofdplaats van {}.;Wat is de hoofdplaats van {}?
 P37;officiële taal;{} heeft als officiële taal(s) {}.;Welke taal(s) is/zijn de officiële(n) van {}?

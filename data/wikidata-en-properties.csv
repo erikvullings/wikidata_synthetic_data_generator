@@ -23,7 +23,7 @@ P25;mother;{}'s mother is {}.;Who is the mother of {}?
 P26;spouse;{} is married to {}.;Who is the spouse of {}?
 P27;country of citizenship;{} is a citizen of {}.;{} was a citizen of what country?
 P30;continent;{} is located on the continent of {}.;On which continent is {} located?
-P31;instance of;{} is an instance of {}.;What type of entity or class is {} an instance of?
+P31;instance of;{} is an instance of a {}.;What type of entity or class is {} an instance of?
 P35;head of state;{} is the head of state of {}.;Who is the head of state of {}?
 P36;capital;{} is the capital of {}.;What is the capital of {}?
 P37;official language;{} has {} as an official language.;What is the official language of {}?
