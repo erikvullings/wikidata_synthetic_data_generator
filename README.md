@@ -58,7 +58,7 @@ choco install aria2
 aria2c.exe -x 16 https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz
 ```
 
-Unzip the data to `latest-all.json` using 7zip or some efficient unzipper that shows progress, as 1.5Tb takes some time to unzip.
+Unzip the data to `latest-all.json` using 7zip or some efficient unzipper that shows progress, as 1.5Tb takes some time to unzip. Currently, only English and Dutch are supported out-of-the-box, but if you wish to add another language, see [Translating properties](#Translating properties).
 
 ## Run
 
@@ -80,25 +80,30 @@ Alternatively, on Windows:
 cargo run --release D:\data\wikidata\latest-all.json -l en -o ./output
 ```
 
-## Extracting names
+## Utilities
 
-The output will contain a `human.csv` file, containing information about non-private humans, i.e. people who have been linked to Wikipedia articles.
-To extract names and aliases from this file, you can use the following Python script:
+### Extracting names
+
+After running the main process, the output folder will contain a `human.csv` file, containing information about non-private humans, i.e. people who have been linked to Wikipedia articles. To extract names and aliases from this file, e.g. for PII, you can use the following Python script:
 
 ```bash
 chmod +x extract_aliases.py
-./extract_aliases.py < output/en/human.csv > output/en/names_aliases.csv
+./extract_aliases.py < ../output/en/human.csv > ../output/en/names_aliases.csv
 ```
 
-## Queries
+### Translating properties
 
-[Script source](https://github.com/kermitt2/grisp/blob/master/scripts/wikipedia-resources.sh).
+This application makes use of a language specific CSV file to convert Wikibase properties to sentences and questions. E.g. property P22 represents `father`, which is converted using an LLM to a sentence format `{}'s father is {}.` or a question `Who is the father of {}?`, where the first `{}` is replaced by the Wikibase label, and the second `{}` or the answer is represented by its value. The value could be another Wikidata entity in case the father is well-known, or a literal value. Or, for other properties, it could be an amount, an URL, an external identifier, GPS coordinates, or a time value. For English and Dutch, the required `csv` files are already present, but if you wish to do this for another language, see the instructions below.
 
-To get the language-specific labels of the Wikibase properties `Pxxx`, download the properties in JSON format using a SPARQL query. For example, replace `<TWO_LETTER_LANGUAGE_CODE>` with `en` for English or `nl` for Dutch:
+- Obtain all used properties in a certain language: To get the language-specific labels of the Wikibase properties `Pxxx`, download the properties in JSON format using a SPARQL query. For example, replace `<TWO_LETTER_LANGUAGE_CODE>` with `en` for English or `nl` for Dutch, which will generate `./data/wikidata-en-properties.json`:
+  
+  ```bash
+  wget "https://query.wikidata.org/sparql?format=json&query=SELECT%20%3Fproperty%20%3FpropertyLabel%20WHERE%20%7B%0A%20%20%20%20%3Fproperty%20a%20wikibase%3AProperty%20.%0A%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%0A%20%20%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20%22<TWO_LETTER_LANGUAGE_CODE>%22%20.%0A%20%20%20%7D%0A%20%7D%0A%0A" -O wikidata-<TWO_LETTER_LANGUAGE_CODE>-properties.json
+  ```
 
-```bash
- wget "https://query.wikidata.org/sparql?format=json&query=SELECT%20%3Fproperty%20%3FpropertyLabel%20WHERE%20%7B%0A%20%20%20%20%3Fproperty%20a%20wikibase%3AProperty%20.%0A%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%0A%20%20%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20%22<TWO_LETTER_LANGUAGE_CODE>%22%20.%0A%20%20%20%7D%0A%20%7D%0A%0A" -O wikidata-<TWO_LETTER_LANGUAGE_CODE>-properties.json
- ```
+- For each property in `./data/wikidata-en-properties.json`, ask an LLM to create a sentence of question using placeholders. Run the python script `./data/convert_to_csv.py` which uses a locally running Ollama and the `phi4` LLM model. It will create `./data/wikidata-en-properties.csv`, where the `-en-` represents the language code. This CSV file is required by the main program to support the generation of synthetic text.
+
+### Other information
 
 To get the latest page properties, language links and actual articles:
 
