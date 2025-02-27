@@ -67,14 +67,11 @@ fn prefill_cache(
         "{}/{}/entity_cache.csv",
         config.output_dir, config.lang,
     ));
-    println!("Output file: {:?}", output_file);
-
+    
     let entity_map = DashMap::new();
-
+    
     if !config.recreate_cache && Path::new(&output_file).exists() {
-        // TODO Remove
-        // return Ok(entity_map);
-        // Load cache from disk
+        println!("Loading existing cache file: {:?}", output_file);
         let mut reader = csv::Reader::from_path(output_file)?;
         for result in reader.records() {
             let record = result?;
@@ -94,7 +91,8 @@ fn prefill_cache(
         entity_map.shrink_to_fit();
         return Ok(entity_map);
     }
-
+    println!("Prefilling cache file: {:?}", output_file);
+    
     // Open input file and get total file size for progress tracking
     let file = File::open(input_path).expect("JSON dump file not found");
     let file_size = file.metadata()?.len();
@@ -197,7 +195,7 @@ fn process_wikidata(
 
     let properties_file = PathBuf::from(format!("./data/wikidata-{}-properties.csv", config.lang,));
     println!(
-        "Properties and input file: {:?}, {}",
+        "Processing Wikidata using properties and input file: {:?}, {}",
         properties_file, input_path
     );
 
