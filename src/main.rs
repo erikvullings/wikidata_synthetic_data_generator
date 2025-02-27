@@ -519,17 +519,18 @@ fn process_wikidata(
                             }
                         }
 
-                        let category = instance_of
-                            .first()
-                            .map(|key| *key as u32)
-                            .and_then(|key| resolver.get(&key).map(|r| r.value().clone())) // Ensure ownership
-                            .unwrap_or_else(|| "misc".to_string()); // Ensure the fallback is owned
+                       
                         // println!("{}: {}", label, category);
                         // println!("{}: Sentences: {}", label, sentences.join("\n"));
                         // println!("{}: Questions: {}", label, questions.join("\n"));
                         // println!("{}: {:?}", category, instance_of);
                         if !sentences.is_empty() || !questions.is_empty() {
-                            csv_writers.write(
+                            let category = instance_of
+                                .first()
+                                .map(|key| *key as u32)
+                                .and_then(|key| resolver.get(&key).map(|r| r.value().clone())) // Ensure ownership
+                                .unwrap_or_else(|| "misc".to_string()); // Ensure the fallback is owned
+                             csv_writers.write(
                                 &category,
                                 &[label, &sentences.join("\n"), &questions.join("\n")],
                             );

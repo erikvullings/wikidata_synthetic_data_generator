@@ -37,8 +37,12 @@ pub fn generate_text<T: AsRef<str>>(
                 .replacen("{}", prop_label, 1)
                 .replacen("{}", &value, 1);
             let question = question.replace("{}", &prop_label) + &format!(" [{}]", value);
-            sentences.push(sentence);
-            questions.push(question);
+            if !sentence.is_empty() {
+                sentences.push(sentence);
+            }
+            if !question.is_ascii() {
+                questions.push(question);
+            }
         }
         None => {}
     };
