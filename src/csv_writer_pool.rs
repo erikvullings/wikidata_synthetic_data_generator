@@ -31,6 +31,10 @@ impl CsvWriterPool {
 
     /// Writes a record to the appropriate CSV file
     pub fn write(&self, category: &str, record: &[&str]) {
+        if record.iter().all(|&field| field.is_empty()) {
+            return; // Skip writing empty records
+        }
+
         let filename = sanitize_filename(category);
         let writer = self
             .writers
