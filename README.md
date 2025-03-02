@@ -88,7 +88,8 @@ After running the main process, the output folder will contain a `human.csv` fil
 
 ```bash
 chmod +x extract_aliases.py
-./extract_aliases.py < ../output/en/human.csv > ../output/en/names_aliases.csv
+./extract_aliases.py < ../output/en/human.csv > ../output/public_names/names_aliases_en.csv
+./extract_aliases_nl.py < ../output/nl/mens.csv > ../output/public_names/names_aliases_nl.csv
 ```
 
 ### Translating properties

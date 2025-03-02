@@ -3,9 +3,9 @@ descriptions;descriptions;{} is een {}.;Geef een omschrijving van "{}"?
 person_descriptions;person_descriptions;{} is een {}.;Geef een omschrijving van "{}"?
 aliases;aliases;{} staat ook bekend als {}.;Geen een of meer bijnamen voor "{}"?
 person_aliases;person_aliases;{} staat ook bekend als {}.;Geef een of meer bijnamen voor "{}"?
-male_person;male_person;he;he
-female_person;female_person;she;she
-list;list;and;and
+male_person;male_person;hij;hij
+female_person;female_person;zij;zij
+list;list;en;en
 date_format;date_format;%Y-%m-%d;%Y-%m-%d
 missing_date;missing_date;een onbekende datum;een onbekende datum
 P6;bestuurshoofd;{} is het bestuurshoofd van {}.;Wie is het bestuurshoofd van {}?
