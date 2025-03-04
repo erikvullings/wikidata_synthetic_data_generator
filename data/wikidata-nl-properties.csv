@@ -9,105 +9,105 @@ list;list;en;en
 date_format;date_format;%Y-%m-%d;%Y-%m-%d
 missing_date;missing_date;een onbekende datum;een onbekende datum
 P6;bestuurshoofd;{} is het bestuurshoofd van {}.;Wie is het bestuurshoofd van {}?
-P10;video;{} heeft een video.;Heeft {} een video?
-P14;wegbord;{} heeft een wegboord met de code {}.;Wat is de code van het wegboord dat bij {} hoort?
+P10;video;{} heeft een video {}.;Welke video(s) heeft {}?
+P14;wegbord;{} heeft een wegbord met de code {}.;Wat is de code van het wegbord dat bij {} hoort?
 P15;routekaart;{} heeft een routekaart van {}.;Wat is de routekaart van {}?
 P16;transportnetwerk;{} maakt deel uit van het transportnetwerk {}.;Van welk transportnetwerk is {} een onderdeel?
-P17;land;{} heeft land {}.;Welk land heeft {}?
+P17;land;{} heeft als land {}.;Welk land heeft {}?
 P18;afbeelding;{} heeft een afbeelding van {}.;Wat is de afbeelding van {}?
 P19;geboorteplaats;{} werd geboren in {}.;Waar werd {} geboren?
 P20;overlijdensplaats;{} overleed in {}.;Waar is {} overleden?
 P21;sekse of geslacht;{} heeft het geslacht {}.;Wat is het geslacht van {}?
-P22;vader;{} heeft een Vader van {}.;Wie is de vader van {}?
-P25;moeder;{} is de moeder van {}.;Wie is de moeder van {}?
+P22;vader;{} heeft als vader {}.;Wie is de vader van {}?
+P25;moeder;{} heeft als moeder {}.;Wie is de moeder van {}?
 P26;huwelijkspartner;{} is getrouwd met {}.;Wie is de echtgenoot/echtgenote van {}?
-P27;land van nationaliteit;{} heeft de nationaliteit van {}.;Wat is het land van nationaliteit van {}?
-P30;continent;{} bevindt zich op het continent {}.;Op welk continent bevindt zich {}?
+P27;land van nationaliteit;{} heeft de nationaliteit van {}.;Van welk land heeft {} de nationaliteit?
+P30;continent;{} bevindt zich op continent {}.;Op welk continent bevindt zich {}?
 P31;is een;{} is een type {}.;Wat voor een typering(-en) heeft {}?
-P35;staatshoofd;{} is staatschef van {}.;Wie was de staatshoofd van {}?
+P35;staatshoofd;{} is staatshoofd van {}.;Wie was het staatshoofd van {}?
 P36;hoofdplaats;{} is hoofdplaats van {}.;Wat is de hoofdplaats van {}?
-P37;officiële taal;{} heeft als officiële taal(s) {}.;Welke taal(s) is/zijn de officiële(n) van {}?
+P37;officiële taal;{} heeft als officiële taal/talen {}.;Wat is/zijn de officiële taal van {}?
 P38;valuta;{} heeft de valuta {}.;Welke valuta heeft {}?
-P39;ambt;{} heeft het ambt van {}.;Welk ambt had {}?
-P40;kind;{} heeft de eigenschap van het type {}.;Wat is het type van {}?
+P39;ambt;{} heeft het ambt van {}.;Welk ambt heeft {}?
+P40;kind;{} heeft als kind {}.;Wie is kind van {}?
 P41;vlagafbeelding;{} heeft als vlagafbeelding {}.;Welke vlagafbeelding heeft {}?
 P47;grenst aan;{} grenst aan {}.;Wat grenst aan {}?
 P50;auteur;{} is de auteur van {}.;Wie is de auteur van {}?
 P51;audio;{} heeft een audiobestand met titel '{}'.;Wat is de titel van het audiobestand van {}?
 P53;familie;{} heeft als familieleden {}.;Wie zijn de familieleden van {}?
-P54;lid van sportteam of club;{} is lid van sportteam of club {}.;Voor welk sportteam of club is {} lid?
+P54;lid van sportteam of club;{} is lid van sportteam of club {}.;Van welk sportteam of club is {} lid?
 P57;regisseur;{} is de regisseur van {}.;Wie is de regisseur van {}?
-P58;scenarioschrijver;{} is de scenario'schrijver van {}.;Wie is de scenario'schrijver van {}?
-P59;sterrenbeeld;{} behoort tot het sterrenbeeld {}.;Tot welk sterrenbeeld behoort {}?
+P58;scenarioschrijver;{} is de scenario'schrijver van {}.;Wie is de scenario schrijver van {}?
+P59;sterrenbeeld;{} heeft het sterrenbeeld {}.;Welk sterrenbeeld heeft {}?
 P61;ontdekker of uitvinder;{} is ontdekker of uitvinder van {}.;Wie is de ontdekker of uitvinder van {}?
-P65;locatie van astronomische ontdekking;{} is de locatie van astronomische ontdekking van {}.;Wat is de locatie van astronomische ontdekking van {}?
-P66;herkomstoord;{} is afkomstig uit {}.;Uit welk land komt {} oorspronkelijk?
+P65;locatie van astronomische ontdekking;{} is ontdekt op de astronomische locatie van {}.;Op welke astronomische locatie werd {} ontdekt?
+P66;herkomstoord;{} is afkomstig uit {}.;Uit welk oord komt {} oorspronkelijk?
 P69;opleiding gevolgd aan;{} heeft een opleiding gevolgd aan {}.;Aan welk instituut of universiteit heeft {} zijn opleiding gevolgd?
 P78;topleveldomein;{} behoort tot het toplevel domein {}.;Tot welk toplevel domein behoort {}?
 P81;lijn;{} rijdt op lijn {}.;Op welke lijn rijdt {}?
 P84;architect;{} is ontworpen door {}.;Wie heeft {} ontworpen?
-P85;volkslied;{} is een volkslied van {}.;Van welk land is {} een volkslied?
-P86;componist;{} is een componist van {}.;Wat zijn de werken van de componist {}?
-P87;librettist;{} is de librettist van {}.;Wie is de librettist van {}?
-P88;opdrachtgever;{} is opdrachtgever van {}.;Wie is de opdrachtgever van {}?
+P85;volkslied;Het volkslied van {} is {}.;Wat is het volkslied van {}?
+P86;componist;{} werd gecomponeerd door {}.;Wie is de componist van {}?
+P87;librettist;De librettist van {} is {}.;Wie is de librettist van {}?
+P88;opdrachtgever;De opdrachtgever van {} is {}.;Wie is de opdrachtgever van {}?
 P91;seksuele geaardheid;{} heeft de seksuele geaardheid {}.;Wat is de seksuele geaardheid van {}?
 P92;reglement;{} heeft reglement {}.;Wat is het reglement van {}?
 P94;wapenafbeelding;{} heeft een wapenafbeelding van {}.;Wat is de wapenafbeelding van {}?
-P97;adellijke titel;{} heeft de adellijke titel van {}.;Welke adellijke titel had {}?
-P98;redacteur;{} is redacteur van {}.;Wie is de redacteur van {}?
+P97;adellijke titel;{} heeft de adellijke titel van {}.;Welke adellijke titel heeft {}?
+P98;redacteur;De redacteur van {} is {}.;Wie is de redacteur van {}?
 P101;werkveld;{} is actief in het werkveld van {}.;In welk werkveld is {} actief?
-P102;lid van politieke partij;{} is lid van de politieke partij {}.;Voor welke politieke partij is {} lid?
-P103;moedertaal;{} spreekt als moedertaal {}.;Welke taal is de moedertaal van {}?
+P102;lid van politieke partij;{} is lid van de politieke partij {}.;Van welke politieke partij is {} lid?
+P103;moedertaal;{} spreekt als moedertaal {}.;Welke moedertaal spreekt {}?
 P105;taxonomische rang;{} heeft de taxonomische rang van {}.;Wat is de taxonomische rang van {}?
 P106;beroep;{} heeft gewerkt als {}.;Welk beroep of welke beroepen heeft {} gehad?
 P108;werkgever;{} heeft als werkgever {}.;Wie waren de werkgevers van {}?
 P109;handtekening;{} heeft de handtekening '{}'.;Wat is de handtekening van {}?
-P110;illustrator;{} is de illustrator van {}.;Wie is de illustrator van {}?
+P110;illustrator;De illustrator van {} is {}.;Wie is de illustrator van {}?
 P111;gemeten natuurkundige grootheid;{} heeft de gemeten natuurkundige grootheid van {}.;Wat is de gemeten natuurkundige grootheid van {}?
 P112;opgericht door;{} werd opgericht door {}.;Door wie werd {} opgericht?
 P113;hub;{} is verbonden met {}.;Met wie of wat is {} verbonden?
 P114;luchtvaartalliantie;{} heeft een luchtvaartalliantie met {}.;Met welke luchtvaartmaatschappij heeft {} een alliantie?
-P115;accommodatie;{} heeft accommodatie in {}.;Waar heeft {} accommodatie?
+P115;accommodatie;{} heeft accommodatie in {}.;Waar heeft {} een accommodatie?
 P117;chemische structuur;{} heeft de chemische structuur {}.;Wat is de chemische structuur van {}?
 P118;competitie;{} heeft deelgenomen aan de competitie {}.;Aan welke competitie heeft {} deelgenomen?
 P119;begraafplaats;{} is begraven op {}.;Op welke begraafplaats ligt {} begraven?
 P121;beheert;{} beheert {}.;Wat wordt door {} beheerd?
-P122;regeringsvorm;{} heeft de regeringsvorm {}.;Welke regeringsvorm heeft {}?
-P123;uitgeverij;{} is uitgeverij van {}.;Welke uitgeverij heeft {} gepubliceerd?
-P126;beheerder;{} is beheerder van {}.;Wie is de beheerder van {}?
-P127;eigendom van;{} is eigendom van {}.;Waarvan is {} eigendom?
+P122;regeringsvorm;De regeringsvorm van {} is {}.;Welke regeringsvorm heeft {}?
+P123;uitgeverij;De uitgeverij van {} is {}.;Welke uitgeverij heeft {} gepubliceerd?
+P126;beheerder;De beheerder van {} is {}.;Wie is de beheerder van {}?
+P127;eigendom van;{} is eigendom van {}.;Van wie is {} eigendom?
 P128;reguleert (moleculaire biologie);{} reguleert (moleculaire biologie) {}.;Wat reguleert {} (moleculaire biologie)?
 P129;interactie met;{} interacteert met {}.;Met wie interacteert {}?
-P131;gelegen in bestuurlijke eenheid;{} is gelegen in bestuurlijke eenheid {}.;In welke bestuurlijke eenheid ligt {}?
-P135;stroming;{} heeft een stroming van {}.;Wat is de stroming van {}?
+P131;gelegen in bestuurlijke eenheid;{} ligt in de bestuurlijke eenheid {}.;In welke bestuurlijke eenheid ligt {}?
+P135;stroming;{} behoort tot de stroming van {}.;Tot welke stroming behoort {}?
 P136;genre;{} behoort tot het genre {}.;Tot welk genre behoort {}?
 P137;operator;{} is beheerd door {}.;Door wie wordt {} beheerd?
 P138;vernoemd naar;{} is vernoemd naar {}.;Naar wie of wat is {} vernoemd?
-P140;religie of wereldbeeld;{} heeft de religie of wereldbeeld {}.;Wat is het religieuze geloof of wereldbeeld van {}?
+P140;religie of wereldbeeld;{} heeft de religie of het wereldbeeld {}.;Wat is de religieu of het wereldbeeld van {}?
 P141;IUCN-status;{} heeft een IUCN-status van {}.;Wat is de IUCN-status van {}?
-P143;geïmporteerd uit Wikimedia-project;{} is geïmporteerd uit {}.;Uit welk Wikimedia-project is {} geïmporteerd?
-P144;gebaseerd op;{} is gebaseerd op {}.;Op welke bron is {} gebaseerd?
-P149;bouwstijl;{} heeft bouwstijl {}.;Wat is de bouwstijl van {}?
+P143;geïmporteerd uit Wikimedia-project;{} is geïmporteerd uit Wikimedia project {}.;Uit welk Wikimedia-project is {} geïmporteerd?
+P144;gebaseerd op;{} is gebaseerd op {}.;Waarop is {} gebaseerd?
+P149;bouwstijl;{} heeft als bouwstijl {}.;Wat is de bouwstijl van {}?
 P150;omvat bestuurlijke eenheid;{} omvat de bestuurlijke eenheid {}.;Welke bestuurlijke eenheid wordt door {} omvat?
 P154;logo;{} heeft het logo {}.;Wat is het logo van {}?
-P155;vorige;{} heeft als voorganger {}.;Wie was de voorganger van {}?
-P156;volgende;{} is de volgende van {}.;Wie is de volgende van {}?
+P155;vorige;{} heeft {} als vorig deel in de serie.;Wat was het vorige deel in de serie van {}?
+P156;volgende;{} heeft {} als volgend deel in de serie.;Wat is het volgende deel in de serie van {}?
 P157;omgebracht door;{} is omgebracht door {}.;Door wie werd {} omgebracht?
 P158;zegelafbeelding;{} heeft een zegelafbeelding van {}.;Wat is de zegelafbeelding van {}?
 P159;locatie van hoofdvestiging;{} heeft zijn hoofdvestiging in {}.;Waar heeft {} zijn hoofdvestiging?
-P161;rolverdeling;{} heeft een rolverdeling van {}.;Wat is de rolverdeling van {}?
+P161;rolverdeling;{} heeft de rolverdeling {}.;Wat is de rolverdeling van {}?
 P162;producer;{} is geproduceerd door {}.;Door wie werd {} geproduceerd?
-P163;vlagbeschrijving;{} heeft als vlagbeschrijving '{}'.;Wat is de vlagbeschrijving van {}?
-P166;onderscheiding;{} heeft de onderscheiding {} ontvangen.;Welke onderscheiding heeft {} ontvangen?
+P163;vlagbeschrijving;{} heeft als vlagbeschrijving {}.;Wat is de vlagbeschrijving van {}?
+P166;onderscheiding;{} heeft de onderscheiding(-en) {} ontvangen.;Welke onderscheiding(-en) heeft {} ontvangen?
 P167;vervangen door bouwwerk;{} werd vervangen door bouwwerk {}.;Door welk bouwwerk werd {} vervangen?
 P169;bestuursvoorzitter;{} is bestuursvoorzitter van {}.;Wie is de bestuursvoorzitter van {}?
 P170;maker;{} is gemaakt door {}.;Door wie werd {} gemaakt?
-P171;moedertaxon;{} is de moeder van {}.;Wie is de moeder van {}?
+P171;moedertaxon;De moedertaxon van {} is {}.;Wat is de moedertaxon van {}?
 P172;etnische groep;{} behoort tot de etnische groep {}.;Tot welke etnische groep behoort {}?
 P175;uitvoerend artiest;{} wordt uitgevoerd door {}.;Wie voert {} uit?
-P176;fabrikant;{} is fabrikant van {}.;Voor welke producten of merken is {} de fabrikant?
-P177;overspant;{} overspant over {}.;Over welke objecten overspant {}?
-P178;ontwikkelaar;{} is ontwikkelaar van {}.;Wat heeft {} als ontwikkelaar gedaan?
+P176;fabrikant;{} is fabrikant van {}.;Van welke producten of merken is {} de fabrikant?
+P177;overspant;{} overbrugt {}.;Wat overbrugt {}?
+P178;ontwikkelaar;{} is ontwikkelaar van {}.;Wat heeft {} ontwikkeld?
 P179;deel van serie;{} is deel van serie {}.;Van welke serie is {} een onderdeel?
 P180;beeldt af;{} beeldt af {}.;Wat beeldt {} af?
 P181;leefgebiedenkaart;{} heeft een leefgebiedenkaart van {}.;Wat is de leefgebiedenkaart van {}?
@@ -118,7 +118,7 @@ P186;materiaal;{} is gemaakt van {}.;Van welk materiaal is {} gemaakt?
 P189;locatie van ontdekking;{} werd ontdekt in {}.;Waar werd {} ontdekt?
 P190;zusterplaats;{} heeft als zusterplaats {}.;Welke plaats is de zusterplaats van {}?
 P193;hoofdaannemer;{} is hoofdaannemer van {}.;Wie is de hoofdaannemer van {}?
-P194;wetgevend orgaan;{} is een wetgevend orgaan van {}.;Wat is het wetgevende orgaan van {}?
+P194;wetgevend orgaan;Het wetgevend orgaan van {} is {}.;Wat is het wetgevende orgaan van {}?
 P195;collectie;{} behoort tot de collectie {}.;Tot welke collectie behoort {}?
 P196;kleine planeetgroep;{} behoort tot de kleine planeetgroep {}.;Tot welke kleine planeetgroep behoort {}?
 P197;opvolgend station;{} is het opvolgend station van {}.;Wat is het opvolgende station van {}?
@@ -126,13 +126,13 @@ P199;bedrijfsonderdeel;{} is een bedrijfsonderdeel van {}.;Van welk bedrijf is {
 P200;instroom;{} heeft een instroom van {}.;Wat is de instroom van {}?
 P201;uitstroom;{} heeft een uitstroom van {}.;Wat is de uitstroom van {}?
 P205;stroomgebiedsland;{} heeft een stroomgebiedsland van {}.;Welk land is het stroomgebiedsland van {}?
-P206;gelegen in of aan waterlichaam;{} ligt in of aan het waterlichaam {}.;In welk of aan welk waterlichaam ligt {}?
+P206;gelegen in of aan waterlichaam;{} ligt in of aan het waterlichaam {}.;In of aan welk waterlichaam ligt {}?
 P207;bathymetrie-afbeelding;{} heeft een bathymetrie-afbeelding van {}.;Wat is de bathymetrie-afbeelding van {}?
-P208;uitvoerende macht;{} is de uitvoerende macht van {}.;Wat is de uitvoerende macht van {}?
-P209;hoogste juridische autoriteit;{} is de hoogste juridische autoriteit van {}.;Wie is de hoogste juridische autoriteit van {}?
-P210;partijleider;{} is partijleider van {}.;Wie is de partijleider van {}?
+P208;uitvoerende macht;{} heeft {} als uitvoerende macht.;Wat is de uitvoerende macht van {}?
+P209;hoogste juridische autoriteit;{} heeft {} als de hoogste juridische autoriteit.;Wat is de hoogste juridische autoriteit van {}?
+P210;partijleider;De partijleider van {} is {}.;Wie is de partijleider van {}?
 P212;ISBN-13;{} heeft het ISBN-13 nummer {}.;Wat is het ISBN-13 nummer van {}?
-P213;ISNI;{} heeft de ISNI-nummer {}.;Wat is het ISNI-nummer van {}?
+P213;ISNI;{} heeft het ISNI-nummer {}.;Wat is het ISNI-nummer van {}?
 P214;VIAF-identificatiecode;{} heeft de VIAF-identificatiecode {}.;Wat is de VIAF-identificatiecode van {}?
 P215;spectraalklasse;{} heeft de spectraalklasse {}.;Wat is de spectraalklasse van {}?
 P217;inventarisnummer;{} heeft het inventarisnummer {}.;Wat is het inventarisnummer van {}?
@@ -146,24 +146,24 @@ P227;GND-identificatiecode;{} heeft de GND-identificatiecode {}.;Wat is de GND-i
 P229;IATA-identificatiecode (alfabetisch) voor luchtvaartmaatschappij;{} heeft de IATA-identificatiecode (alfabetisch) voor luchtvaartmaatschappij {}.;Wat is de IATA-identificatiecode (alfabetisch) van de luchtvaartmaatschappij {}?
 P230;ICAO-identificatiecode voor luchtvaartmaatschappij;{} heeft de ICAO-identificatiecode voor luchtvaartmaatschappij {}.;Wat is de ICAO-identificatiecode voor luchtvaartmaatschappij van {}?
 P231;CAS-identificatiecode;{} heeft de CAS-identificatiecode {}.;Wat is de CAS-identificatiecode van {}?
-P232;EG-nummer;{} heeft het EG-nummer {}.;Wat is het EG-nummer van {}?
-P233;SMILES;{} heeft de SMILES notatie {}.;Wat is de SMILES notatie van {}?
+P232;EG-nummer;{} heeft het EG-nummer (identificatiecode voor chemische verbindingen) {}.;Wat is het EG-nummer (identificatiecode voor chemische verbindingen) van {}?
+P233;SMILES;{} heeft de SMILES (Simplified Molecular Input Line Entry Specification) notatie {}.;Wat is de SMILES (Simplified Molecular Input Line Entry Specification) notatie van {}?
 P234;InChI-identificatiecode;{} heeft de InChI-identificatiecode {}.;Wat is de InChI-identificatiecode van {}?
 P235;InChIKey;{} heeft de InChIKey {}.;Wat is de InChIKey van {}?
-P236;ISSN;{} heeft het ISSN {}.;Wat is het ISSN van {}?
-P237;wapenbeschrijving;{} heeft een wapenbeschrijving van '{}'.;Wat is de wapenbeschrijving van {}?
-P238;IATA-identificatiecode voor luchthaven;{} heeft de IATA-identificatiecode voor luchthaven {}.;Wat is de IATA-identificatiecode van de luchthaven {}?
-P239;ICAO-identificatiecode voor luchthaven;{} heeft de ICAO-identificatiecode voor luchthaven {}.;Wat is de ICAO-identificatiecode voor luchthaven van {}?
-P240;FAA-identificatiecode voor luchthaven in de Verenigde Staten;{} heeft de FAA-identificatiecode voor luchthaven in de Verenigde Staten {}.;Wat is de FAA-identificatiecode voor luchthaven van {} in de Verenigde Staten?
-P241;militaire tak;{} heeft een militaire tak.;Wat is de militaire tak van {}?
+P236;ISSN;{} heeft het ISSN (International Standard Serial Number) {}.;Wat is het ISSN (International Standard Serial Number) van {}?
+P237;wapenbeschrijving;{} heeft {} als wapenbeschrijving.;Wat is de wapenbeschrijving van {}?
+P238;IATA-identificatiecode voor luchthaven;{} heeft {} als de IATA-identificatiecode voor luchthavens.;Wat is de IATA-identificatiecode van de luchthaven {}?
+P239;ICAO-identificatiecode voor luchthaven;{} heeft {} als de ICAO-identificatiecode voor luchthavens.;Wat is de ICAO-identificatiecode van de luchthaven {}?
+P240;FAA-identificatiecode voor luchthaven in de Verenigde Staten;{} heeft de FAA-identificatiecode voor luchthavens in de Verenigde Staten {}.;Wat is de FAA-identificatiecode voor luchthaven {} in de Verenigde Staten?
+P241;militaire tak;{} is een militaire tak van {}.;Wat is de militaire tak van {}?
 P242;liggingskaart;{} heeft een liggingskaart van {}.;Wat is de liggingskaart van {}?
 P243;OCLC-identificatiecode;{} heeft de OCLC-identificatiecode {}.;Wat is de OCLC-identificatiecode van {}?
 P244;LCAuth-identificatiecode;{} heeft de LCAuth-identificatiecode {}.;Wat is de LCAuth-identificatiecode van {}?
 P245;ULAN-identificatiecode;{} heeft de ULAN-identificatiecode {}.;Wat is de ULAN-identificatiecode van {}?
-P246;chemisch symbool;{} heeft het chemisch symbool {}.;Wat is het chemisch symbool van {}?
+P246;chemisch symbool;{} heeft als chemisch symbool {}.;Wat is het chemisch symbool van {}?
 P247;COSPAR-identificatiecode;{} heeft de COSPAR-identificatiecode {}.;Wat is de COSPAR-identificatiecode van {}?
 P248;vermeld in;{} is vermeld in {}.;In welke bronnen wordt {} vermeld?
-P249;tickersymbool;{} heeft het ticker symbool {}.;Wat is het ticker symbool van {}?
+P249;tickersymbool;{} heeft het tickersymbool {}.;Wat is het tickersymbool van {}?
 P263;officiële residentie;{} heeft als officiële residentie {}.;Wat is de officiële residentie van {}?
 P264;platenlabel;{} heeft het platenlabel {}.;Welk platenlabel heeft {} gehad?
 P267;ATC-identificatiecode;{} heeft de ATC-identificatiecode {}.;Wat is de ATC-identificatiecode van {}?
@@ -172,26 +172,26 @@ P269;idRef-identificatiecode;{} heeft de idRef-identificatiecode {}.;Wat is de i
 P270;CALIS-identificatiecode;{} heeft de CALIS-identificatiecode {}.;Wat is de CALIS-identificatiecode van {}?
 P271;NACSIS-CAT-identificatiecode voor auteur;{} heeft de NACSIS-CAT-identificatiecode voor auteur {}.;Wat is de NACSIS-CAT-identificatiecode voor auteur van {}?
 P272;productiebedrijf;{} is productiebedrijf van {}.;Welk bedrijf heeft {} geproduceerd?
-P274;chemische formule;{} heeft de chemische formule {}.;Wat is de chemische formule van {}?
-P275;licentie;{} heeft een licentie voor {}.;Wat is de licentie van {} voor?
+P274;chemische formule;{} heeft de chemische formule van {}.;Wat is de chemische formule van {}?
+P275;licentie;{} heeft een licentie voor {}.;Welke licentie(s) heeft {}?
 P276;locatie;{} is gevestigd in {}.;Waar is {} gevestigd?
-P277;programmeertaal;{} is programmeertaal van {}.;Welke programmeertaal gebruikt {}?
+P277;programmeertaal;{} is geprogrammeerd in {}.;In welke programmeertaal werd {} geschreven?
 P278;GOST 7.75–97-identificatiecode voor taal;{} heeft de identificatiecode voor taal volgens GOST 7.75–97 van {}.;Wat is de identificatiecode voor taal volgens GOST 7.75–97 van {}?
-P279;subklasse van;{} is een subklasse van {}.;Wat is de superklasse van {}?
-P281;postcode;{} heeft postcode {}.;Wat is de postcode van {}?
+P279;subklasse van;{} is een subklasse van {}.;Wat is de subklasse van {}?
+P281;postcode;{} heeft de postcode {}.;Wat is de postcode van {}?
 P282;schriftsysteem;{} gebruikt het schriftsysteem {}.;Welk schriftsysteem wordt door {} gebruikt?
 P286;coach;{} is coach of {}.;Wie is de coach van {}?
 P287;ontwerper;{} is ontworpen door {}.;Wie heeft {} ontworpen?
 P289;scheepsklasse;{} behoort tot de scheepsklasse {}.;Tot welke scheepsklasse behoort {}?
 P291;plaats van publicatie;{} is gepubliceerd in {}.;Waar werd {} gepubliceerd?
-P296;stationscode of -afkorting;{} heeft de stationscode -afkorting {}.;Wat is de stationscode van {}?
+P296;stationscode of -afkorting;{} heeft de stationscode of -afkorting {}.;Wat is de stationscode van {}?
 P297;ISO 3166-1 alpha-2-landcode;{} heeft de landcode {} volgens ISO 3166-1 alpha-2.;Wat is de ISO 3166-1 alpha-2 landcode van {}?
-P298;ISO 3166-1 alpha-3-landcode;{} heeft het landcode {} volgens ISO 3166-1 alpha-3.;Wat is de ISO 3166-1 alpha-3 landcode van {}?
+P298;ISO 3166-1 alpha-3-landcode;{} heeft de landcode {} volgens ISO 3166-1 alpha-3.;Wat is de ISO 3166-1 alpha-3 landcode van {}?
 P299;ISO 3166-1-landcode (numeriek);{} heeft de landcode {} volgens ISO 3166-1.;Wat is de ISO 3166-1 landcode van {}?
 P300;ISO 3166-2-identificatiecode;{} heeft de ISO 3166-2-identificatiecode {}.;Wat is de ISO 3166-2-identificatiecode van {}?
 P301;hoofdonderwerp van categorie;{} is hoofdonderwerp van categorie {}.;Wat is het hoofdonderwerp van de categorie voor {}?
 P303;EE-identificatiecode;{} heeft de EE-identificatiecode {}.;Wat is de EE-identificatiecode van {}?
-P304;pagina('s);{} heeft een pagina genaamd '{}'.;Wat is de naam van de pagina die {} heeft?
+P304;paginanummers('s);{} heeft paginanummer(s) {}.;Welke paginanummers heeft {}?
 P305;IETF-identificatiecode voor taal;{} heeft de IETF-identificatiecode voor taal {}.;Wat is de IETF-identificatiecode voor taal van {}?
 P306;besturingssysteem;{} gebruikt het besturingssysteem {}.;Welk besturingssysteem wordt door {} gebruikt?
 P344;director of photography;{} is de cinematograaf van {}.;Wie was de cinematograaf van {}?
@@ -282,7 +282,7 @@ P459;methode van vaststelling;{} heeft de methode van vaststelling {}.;Welke met
 P460;naar verluidt hetzelfde als;{} wordt gezegd hetzelfde te zijn als {}.;Wat wordt gezegd hetzelfde te zijn als {}?
 P461;tegenovergestelde van;{} is tegenovergesteld van {}.;Wat is het tegengestelde van {}?
 P462;kleur;{} heeft de kleur {}.;Wat is de kleur van {}?
-P463;lid van;{} is lid van {}.;Voor welke organisatie of instelling was {} lid?
+P463;lid van;{} is lid van {}.;Van welke organisatie of instelling was {} lid?
 P464;NOR-identificatiecode;{} heeft de NOR-identificatiecode {}.;Wat is de NOR-identificatiecode van {}?
 P465;sRGB-hexcode;{} heeft de sRGB-hexcode {}.;Wat is de sRGB-hexcode van {}?
 P466;gebruiker;{} is gebruiker van {}.;Van welke dienst(en) is/ zijn {} gebruiker(s)?
@@ -718,14 +718,14 @@ P954;IBNR-identificatiecode;{} heeft de IBNR-identificatiecode {}.;Wat is de IBN
 P957;ISBN-10;{} heeft het ISBN-10 nummer {}.;Wat is het ISBN-10 nummer van {}?
 P958;paragraaf of sectie;{} is paragraaf van sectie {}.;Van welke sectie is {} de paragraaf?
 P959;MSW-identificatiecode;{} heeft de MSW-identificatiecode {}.;Wat is de MSW-identificatiecode van {}?
-P960;Tropicos-identificatiecode voor taxon;{} heeft de Tropicos-identificatiecode voor taxon {}.;Wat is de Tropicos-identificatiecode voor het taxon van {}?
-P961;IPNI-identificatiecode voor taxon;{} heeft de IPNI-identificatiecode voor taxon {}.;Wat is de IPNI-identificatiecode voor het taxon van {}?
-P962;MycoBank-identificatiecode voor taxonnaam;{} heeft de MycoBank-identificatiecode voor taxonnaam {}.;Wat is de MycoBank-identificatiecode voor taxonnaam van {}?
+P960;Tropicos-identificatiecode voor taxon;{} heeft de Tropicos-identificatiecode voor taxon {}.;Wat is de Tropicos-identificatiecode voor het taxon {}?
+P961;IPNI-identificatiecode voor taxon;{} heeft de IPNI-identificatiecode voor taxon {}.;Wat is de IPNI-identificatiecode voor het taxon {}?
+P962;MycoBank-identificatiecode voor taxonnaam;{} heeft de MycoBank-identificatiecode voor taxonnaam {}.;Wat is de MycoBank-identificatiecode voor taxonnaam {}?
 P963;streaming media-url;{} heeft een streaming media-url van {}.;Wat is de streaming media-url van {}?
 P964;Oostenrijkse gemeente-identificatiecode;{} heeft de Oostenrijkse gemeente-identificatiecode {}.;Wat is de Oostenrijkse gemeente-identificatiecode van {}?
 P965;grafnummer;{} heeft grafnummer {}.;Wat is het grafnummer van {}?
-P966;MusicBrainz-identificatiecode voor platenlabel;{} heeft de MusicBrainz-identificatiecode voor platenlabel {}.;Wat is de MusicBrainz-identificatiecode voor platenlabel van {}?
-P967;eregast;{} heeft een eregast.;Heeft {} een eregast?
+P966;MusicBrainz-identificatiecode voor platenlabel;{} heeft de MusicBrainz-identificatiecode voor platenlabel {}.;Wat is de MusicBrainz-identificatiecode voor platenlabel {}?
+P967;eregast;{} heeft een eregast.;Wie is de eregast van {}?
 P968;e-mailadres;{} heeft het e-mailadres {}.;Wat is het e-mailadres van {}?
 P970;neurologische functie;{} heeft een neurologische functie van {}.;Wat is de neurologische functie van {}?
 P971;onderwerpen van categorie;{} behoort tot de categorie {}.;Tot welke categorie behoort {}?
@@ -734,7 +734,7 @@ P973;beschreven op URL;{} is beschreven op URL {}.;Op welke URL wordt {} beschre
 P974;zijrivier;{} is gelegen aan de zijrivier van {}.;Aan welke rivier ligt {} als zijrivier?
 P980;Zweedse weekend- en vakantiewoningen-identificatiecode;{} heeft de Zwitserse weekend- en vakantiewoningen-identificatiecode {}.;Wat is de Zwitserse weekend- en vakantiewoningen-identificatiecode van {}?
 P981;BAG-identificatiecode voor woonplaats;{} heeft de BAG-identificatiecode voor woonplaats {}.;Wat is de BAG-identificatiecode voor woonplaats van {}?
-P982;MusicBrainz-identificatiecode voor gebied;{} heeft de MusicBrainz-identificatiecode voor gebied {}.;Wat is de MusicBrainz-identificatiecode voor gebied van {}?
+P982;MusicBrainz-identificatiecode voor gebied;{} heeft de MusicBrainz-identificatiecode voor gebied {}.;Wat is de MusicBrainz-identificatiecode voor gebied {}?
 P984;IOC-landcode;{} heeft de IOC-landcode van {}.;Wat is de IOC-landcode van {}?
 P988;PSGC-identificatiecode;{} heeft de PSGC-identificatiecode {}.;Wat is de PSGC-identificatiecode van {}?
 P989;gesproken tekst;{} heeft de volgende tekst gesproken: '{}'.;Wat is de gesproken tekst van {}?

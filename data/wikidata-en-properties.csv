@@ -79,19 +79,19 @@ P127;owned by;{} is owned by {}.;Who owns {}?
 P128;regulates (molecular biology);{} regulates {}.;What does {} regulate?
 P129;physically interacts with;{} physically interacts with {}.;With whom does {} physically interact?
 P131;located in the administrative territorial entity;{} is located in the administrative territorial entity {}.;In which administrative territorial entity is {} located?
-P135;movement;{} has a movement style of {}.;What is the movement style of {}?
+P135;movement;{} belongs to the movement of {}.;To what movement does {} belong to?
 P136;genre;{}'s genre is {}.;What is the genre associated with {}?
 P137;operator;{} is operated by {}.;Which company or entity operates {}?
 P138;named after;{} is named after {}.;After whom is {} named?
 P140;religion or worldview;{} follows the religion or worldview of {}.;What is the religion or worldview followed by {}?
 P141;IUCN conservation status;{} has an IUCN conservation status of {}.;What is the IUCN conservation status of {}?
-P143;imported from Wikimedia project;{} was imported from {}.;From which Wikimedia project was {} imported?
+P143;imported from Wikimedia project;{} was imported from Wikimedia project {}.;From which Wikimedia project was {} imported?
 P144;based on;{} is based on {}.;What is {} based on?
 P149;architectural style;{} has an architectural style of {}.;What is the architectural style of {}?
 P150;contains the administrative territorial entity;{} contains the administrative territorial entity {}.;Which administrative territorial entity does {} contain?
 P154;logo image;{} has a logo image represented by {}.;What is the logo image of {}?
-P155;follows;{} follows {}.;What does {} follow?
-P156;followed by;{} followed by {}.;Who or what follows {}?
+P155;follows;{} follows {} in the series.;What is followed by {} in the series?
+P156;followed by;{} is followed by {} in the series.;What follows {} in the series?
 P157;killed by;{} was killed by {}.;Who or what killed {}?
 P158;seal image;{} has a seal image represented by {}.;What is the seal image associated with {}?
 P159;headquarters location;{} has its headquarters located in {}.;Where is the headquarters of {} located?
@@ -146,11 +146,11 @@ P227;GND ID;{} has a GND ID of {}.;What is the GND ID of {}?
 P229;IATA airline designator;{} has the IATA airline designator {}.;What is the IATA airline designator for {}?
 P230;ICAO airline designator;{} has the ICAO airline designator {}.;What is the ICAO airline designator of {}?
 P231;CAS Registry Number;{} has a CAS Registry Number of {}.;What is the CAS Registry Number of {}?
-P232;EC number;{} has an EC number of {}.;What is the EC number of {}?
-P233;canonical SMILES;{} has a canonical SMILES representation of {}.;What is the canonical SMILES representation of {}?
-P234;InChI;{} has an InChI identifier of {}.;What is the InChI identifier for {}?
+P232;EC number;{} has an EC (identifier of a chemical compound) number of {}.;What is the EC (identifier of a chemical compound) number of {}?
+P233;canonical SMILES;{} has a canonical SMILES (Simplified Molecular Input Line Entry Specification) representation of {}.;What is the canonical SMILES (Simplified Molecular Input Line Entry Specification) representation of {}?
+P234;InChI;{} has an InChI (International Chemical Identifier) identifier of {}.;What is the InChI (International Chemical Identifier) identifier for {}?
 P235;InChIKey;{} has an InChIKey of {}.;What is the InChIKey for {}?
-P236;ISSN;{} has an ISSN of {}.;What is the ISSN of {}?
+P236;ISSN;{} has an ISSN (International Standard Serial Number) of {}.;What is the ISSN (International Standard Serial Number) of {}?
 P237;coat of arms;{} has a coat of arms represented by {}.;What is the coat of arms of {}?
 P238;IATA airport code;{} has the IATA airport code {}.;What is the IATA airport code for {}?
 P239;ICAO airport code;{} has the ICAO airport code {}.;What is the ICAO airport code for {}?
