@@ -119,3 +119,7 @@ To get the latest page properties, language links and actual articles:
 - Loop through the language array to create translation files for each target language `(<PAGE_ID>, <TO_LANGUAGE_CODE>, <NAMED_ENTITY_IN_TO_LANGUAGE>)`, e.g. if the NER entity in a German text is Andre Agassi, it refers to `(2,'de','Andre Agassi')` or `(2,'awa','आन्द्रे अगासी')` in Awadhi, so entry 2 in the page properties and pages articles represents the tennis player `Andre Agassi`. In this case, the names are the same, but this is not always the case. For example, `(378,'en','Der Blaue Reiter')` in English becomes `(378,'az','Göy atlı')` in Azerbaijan.
 
 So if you want to perform NER on a German text, and you want to display the results in Dutch, you take the `nlwiki-latest-langlinks.sql.gz` and extract all triplets that link the `de` language code to a page id and translation. Next, you compare a NER entity from the German text to the translated version. If there is a match, you can lookup the Wikibase identifier from the page props, and get the information text from pages articles.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full terms.
